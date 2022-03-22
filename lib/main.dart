@@ -18,22 +18,25 @@ class MyApp extends StatelessWidget {
                 ),
                 //  Center is a widget that centers its child
                 body: Center(
-                    // Container is used to make us can implement padding, margin, background, etc to its child
-                    child: Container(
-                        color: Colors.lightBlue,
-                        width: 150,
-                        height: 100,
-                        child: const Text(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FontStyle.italic,
-                                fontSize: 20
-                            ),
-                        ),
-                    ),
+                    // Column is a widget used to display its children vertically
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                            const Text("Text 1"),
+                            const Text("Text 2"),
+                            const Text("Text 3"),
+                            // Row is a widget used to display its children horizontally
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: const [
+                                    Text("Text 4"),
+                                    Text("Text 5"),
+                                    Text("Text 6"),
+                                ],
+                            )
+                        ],
+                    )
                 ),
             ),
         );

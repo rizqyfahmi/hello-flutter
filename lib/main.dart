@@ -16,28 +16,25 @@ class MyApp extends StatelessWidget {
                 appBar: AppBar(
                     title: const Text("Hello world application"),
                 ),
-                //  Center is a widget that centers its child
-                body: Center(
-                    // Column is a widget used to display its children vertically
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                            const Text("Text 1"),
-                            const Text("Text 2"),
-                            const Text("Text 3"),
-                            // Row is a widget used to display its children horizontally
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: const [
-                                    Text("Text 4"),
-                                    Text("Text 5"),
-                                    Text("Text 6"),
+                // Container is used to make us can implement padding, margin, background, etc to its child
+                body: Container(
+                    color: Colors.blueAccent,
+                    margin: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(16),
+                    child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(
+                                colors: [
+                                    Colors.lime,
+                                    Colors.cyan,
                                 ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight
                             )
-                        ],
-                    )
-                ),
+                        ),
+                    ),
+                )
             ),
         );
     }

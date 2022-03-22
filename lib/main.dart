@@ -14,20 +14,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
     int number = 0;
 
-    void onIncreament() {
-        setState(() {
-            number += 1;
-        });
-    }
-    
-    void onDecreament() {
-        if (number == 0) return;
-
-        setState(() {
-            number -= 1;
-        });
-    }
-
     @override
     Widget build(BuildContext context) {
         return MaterialApp(
@@ -49,13 +35,27 @@ class _MyAppState extends State<MyApp> {
                                     Container(
                                         margin: const EdgeInsets.all(8),
                                         child: ElevatedButton(
-                                            onPressed: onIncreament, child: const Text("Up")
+                                            // Anonymouse method is a method without a name
+                                            onPressed: () {
+                                                setState(() {
+                                                    number += 1;
+                                                });
+                                            }, 
+                                            child: const Text("Up")
                                         ),
                                     ),
                                     Container(
                                         margin: const EdgeInsets.all(8),
                                         child: ElevatedButton(
-                                            onPressed: onDecreament, child: const Text("Down")
+                                            // Anonymouse method is a method without a name
+                                            onPressed: () {
+                                                if (number == 0) return;
+
+                                                setState(() {
+                                                    number -= 1;
+                                                });
+                                            }, 
+                                            child: const Text("Down")
                                         ),
                                     )
                                 ],

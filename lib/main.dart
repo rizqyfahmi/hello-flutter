@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:developer';
+
 
 void main() {
   runApp(const MyApp());
@@ -12,56 +14,31 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-    int number = 0;
+    List<Widget> widgets = [];
+
+    _MyAppState() {
+        widgets = [
+            ...List.generate(50, (index) {
+                return Text(
+                    "Hello ${index + 1}", 
+                    style: const TextStyle(fontSize: 20),
+                );
+            })
+        ];
+    }
 
     @override
-    Widget build(BuildContext context) {
+    Widget build(BuildContext context) { 
         return MaterialApp(
             home: Scaffold(
-                appBar: AppBar(
-                    title: const Text("Hello World Application"),
-                ),
-                body: Center(
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                            Text(
-                                "$number",
-                                style: TextStyle(fontSize: 16 + number.toDouble()),
-                            ),
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                    Container(
-                                        margin: const EdgeInsets.all(8),
-                                        child: ElevatedButton(
-                                            // Anonymouse method is a method without a name
-                                            onPressed: () {
-                                                setState(() {
-                                                    number += 1;
-                                                });
-                                            }, 
-                                            child: const Text("Up")
-                                        ),
-                                    ),
-                                    Container(
-                                        margin: const EdgeInsets.all(8),
-                                        child: ElevatedButton(
-                                            // Anonymouse method is a method without a name
-                                            onPressed: () {
-                                                if (number == 0) return;
-
-                                                setState(() {
-                                                    number -= 1;
-                                                });
-                                            }, 
-                                            child: const Text("Down")
-                                        ),
-                                    )
-                                ],
-                            )
-                        ],
-                    ),
+                appBar: AppBar(title: const Text("Hello world application")),
+                // ListView is a widget used to make the screen is scrollable when it has set of widgets that make it overflow
+                body: ListView(
+                    children: [
+                        Column(
+                            children: widgets,
+                        )
+                    ],
                 ),
             ),
         );

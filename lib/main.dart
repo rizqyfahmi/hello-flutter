@@ -5,37 +5,58 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({ Key? key }) : super(key: key);
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-    Random random = Random();
-
-    @override
-    Widget build(BuildContext context) {
-        return MaterialApp(
-            home: Scaffold(
-                appBar: AppBar(
-                    title: const Text("Hello world application"),
-                ),
-                body: Center(
-                    // GestureDetector is a widget to add gesture(onTap, onDoubleTap, etc) into a widget that doesn't has gesture(onTap, onDoubleTap, etc)
-                    child: GestureDetector(
-                        onTap: () => setState(() {}),
-                        // AnimatedContainer is a container widget used to animate every changes of the container
-                        child: AnimatedContainer(
-                            color: Color.fromARGB(255, random.nextInt(256), random.nextInt(256), random.nextInt(256)),
-                            duration: const Duration(seconds: 1),
-                            width: 50.0 + random.nextInt(101),
-                            height: 50.0 + random.nextInt(101),
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: Scaffold(
+            appBar: AppBar(
+                title: const Text("Hello world application"),
+            ),
+            body: Column(
+                children: [
+                    Flexible(
+                        flex: 1,
+                        child: Row(
+                            children: [
+                                Flexible(
+                                    flex: 1,
+                                    child: Container(
+                                        color: Colors.brown,
+                                    )
+                                ),
+                                Flexible(
+                                    flex: 1,
+                                    child: Container(
+                                        color: Colors.teal,
+                                    )
+                                ),
+                                Flexible(
+                                    flex: 1,
+                                    child: Container(
+                                        color: Colors.redAccent,
+                                    )
+                                )
+                            ],
                         ),
                     ),
-                ),
+                    Flexible(
+                        flex: 2,
+                        child: Container(
+                            color: Colors.purple,
+                        ),
+                    ),
+                    Flexible(
+                        flex: 1,
+                        child: Container(
+                            color: Colors.lime,
+                        ),
+                    ),
+                ],
             ),
-        );
-    }
+        ),
+    );
+  }
 }

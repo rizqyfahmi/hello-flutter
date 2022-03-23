@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hello_flutter/login_page.dart';
-import 'package:hello_flutter/main_page.dart';
-import 'package:hello_flutter/second_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,12 +10,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        home: const LoginPage(),
-        routes: {
-            LoginPage.routeName: (context) => const LoginPage(),
-            MainPage.routeName: (context) => const MainPage(),
-            SecondPage.routeName: (context) => const SecondPage(),
-        },
+        home: Scaffold(
+            appBar: AppBar(
+                title: const Text("AppBar Example"),
+                flexibleSpace: Container(
+                    decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                            colors: [
+                                Color(0xff0096ff),
+                                Color(0xff6610f2)
+                            ],
+                            begin: FractionalOffset.centerLeft,
+                            end: FractionalOffset.centerRight,
+                        ),
+                        image: DecorationImage(
+                            image: AssetImage("images/pattern.png"), 
+                            repeat: ImageRepeat.repeat
+                        )
+                    ),
+                ),
+            ),
+        )
     );
   }
 }

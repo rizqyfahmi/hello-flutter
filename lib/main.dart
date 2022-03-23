@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
-import 'dart:developer' as developer;
 
 void main() {
   runApp(const MyApp());
@@ -16,70 +14,61 @@ class MyApp extends StatelessWidget {
             appBar: AppBar(
                 title: const Text("Hello world application"),
             ),
-            body: Stack(
-                children: [
-                    Column(
-                        children: [
-                            Flexible(
-                                flex: 1,
+            body: Container(
+                width: double.infinity,
+                color: Colors.amber,
+                child: Column(
+                    children: [
+                        Flexible(
+                            flex: 1,
+                            fit: FlexFit.tight,
+                            child: Container(
+                                color: Colors.green,
                                 child: Row(
-                                    children: [
-                                        Flexible(
-                                            child: Container(
-                                                color: Colors.white,
+                                    children: const [
+                                        // Spacer is a widget used to add space that fills remain space
+                                        Spacer(flex: 1),
+                                        //network
+                                        Image(
+                                            height: 100,
+                                            width: 100,
+                                            fit: BoxFit.contain,
+                                            repeat: ImageRepeat.noRepeat,
+                                            image: NetworkImage(
+                                                "https://cdn-icons-png.flaticon.com/128/3917/3917032.png"
                                             ),
                                         ),
-                                        Flexible(
-                                            child: Container(
-                                                color: Colors.black12,
-                                            ),
-                                        )
+                                        // Spacer is a widget used to add space that fills remain space
+                                        Spacer(),
                                     ],
-                                )
-                            ),
-                            Flexible(
-                                flex: 1,
-                                child: Row(
-                                children: [
-                                    Flexible(
-                                        child: Container(
-                                            color: Colors.black12,
-                                        ),
-                                    ),
-                                    Flexible(
-                                        child: Container(
-                                            color: Colors.white,
-                                        ),
-                                    )
-                                    ],
-                                )
-                            )
-                        ],
-                    ),
-                    ListView(
-                        children: List.generate(100, (index) => Text(
-                            "Hello World for ${index + 1}",
-                            style: const TextStyle(
-                                fontFamily: "Poppins",
-                                fontSize: 20
-                            ),
-                        )),
-                    ),
-                    SafeArea(
-                        child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: ElevatedButton(
-                                child: const Text("Press Me!"),
-                                style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.all(Colors.green)
                                 ),
-                                onPressed: () {
-                                    developer.log("Hello");
-                                }
+                            )
+                        ),
+                        Flexible(
+                            flex: 1,
+                            fit: FlexFit.tight,
+                            child: Container(
+                                color: Colors.red,
+                                child: Row(
+                                  children: const [
+                                        // Spacer is a widget used to add space that fills remain space
+                                        Spacer(),
+                                        // local
+                                        Image(
+                                            height: 100,
+                                            width: 100,
+                                            fit: BoxFit.contain,
+                                            repeat: ImageRepeat.noRepeat,
+                                            image: AssetImage("images/paper-plane.png"),
+                                        ),
+                                        // Spacer is a widget used to add space that fills remain space
+                                        Spacer(),
+                                  ],
+                                ),
                             ),
                         )
-                    )
-                ],
+                    ],
+                ),
             ),
         ),
     );

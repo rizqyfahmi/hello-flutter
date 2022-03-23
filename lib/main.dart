@@ -1,36 +1,41 @@
 import 'package:flutter/material.dart';
-import 'dart:developer';
-
+import 'dart:math';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({ Key? key }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
-            appBar: AppBar(
-                title: const Text("Hello world application"),
-            ),
-            body: const Center(
-                child: Text(
-                    "Hello World",
-                    style: TextStyle(
-                        fontFamily: "Poppins",
-                        fontSize: 30,
-                        fontStyle: FontStyle.italic,
-                        decoration: TextDecoration.overline,
-                        decorationColor: Colors.green,
-                        decorationThickness: 5,
-                        decorationStyle: TextDecorationStyle.wavy
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+    Random random = Random();
+
+    @override
+    Widget build(BuildContext context) {
+        return MaterialApp(
+            home: Scaffold(
+                appBar: AppBar(
+                    title: const Text("Hello world application"),
+                ),
+                body: Center(
+                    // GestureDetector is a widget to add gesture(onTap, onDoubleTap, etc) into a widget that doesn't has gesture(onTap, onDoubleTap, etc)
+                    child: GestureDetector(
+                        onTap: () => setState(() {}),
+                        // AnimatedContainer is a container widget used to animate every changes of the container
+                        child: AnimatedContainer(
+                            color: Color.fromARGB(255, random.nextInt(256), random.nextInt(256), random.nextInt(256)),
+                            duration: const Duration(seconds: 1),
+                            width: 50.0 + random.nextInt(101),
+                            height: 50.0 + random.nextInt(101),
+                        ),
                     ),
                 ),
             ),
-        ),
-    );
-  }
+        );
+    }
 }

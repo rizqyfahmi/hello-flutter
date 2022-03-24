@@ -11,49 +11,43 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: DefaultTabController(
-        initialIndex: 2, // set initial active tab
-        length: 4,
+        length: 2, 
         child: Scaffold(
           appBar: AppBar(
-            title: const Text("Tab Bar"),
-            bottom: TabBar(
-              tabs: [
-                const Tab(
-                  icon: Icon(Icons.adb),
-                  text: "Tab 1",
-                ),
-                Tab(
-                  child: Container(
-                    height: 30,
-                    width: 30,
-                    color: Colors.red,  
-                  ),
-                ),
-                const Tab(
-                  icon: Icon(Icons.alarm),
-                ),
-                const Tab(text: "Tab 4")
-              ],
+            elevation: 0,
+            title: const Text("Custom TabBar"),
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(buildTabBar().preferredSize.height),
+              child: Container(
+                color: Colors.amber,
+                child: buildTabBar(),
+              ),
             ),
           ),
           body: const TabBarView(
             children: [
               Center(
-                child: Text("Tab 1"),
+                child: Text("Tab Home"),
               ),
               Center(
-                child: Text("Tab 2"),
-              ),
-              Center(
-                child: Text("Tab 3"),
-              ),
-              Center(
-                child: Text("Tab 4"),
+                child: Text("Tab News"),
               ),
             ],
           ),
-        ),
+        )
+      )
+    );
+  }
+
+  TabBar buildTabBar() {
+    return const TabBar(
+      indicator: BoxDecoration(
+        color: Colors.red
       ),
+      tabs: [
+        Tab(icon: Icon(Icons.home), text: "Home"),
+        Tab(icon: Icon(Icons.newspaper), text: "News")
+      ],
     );
   }
 }

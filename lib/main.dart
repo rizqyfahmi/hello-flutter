@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -15,22 +17,40 @@ class MyApp extends StatelessWidget {
     }
 }
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({
     Key? key,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-            title: const Text("Media Query Screen Size"),
-        ),
-        body: Container(
-            width: MediaQuery.of(context).size.width / 3,
-            height: MediaQuery.of(context).size.height / 2,
-            color: Colors.lime,
-        ),
-    );
-  }
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+    Random random = Random();
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text("Media Query Screen Size"),
+            ),
+            body: (MediaQuery.of(context).orientation == Orientation.portrait) ? (
+                Column(
+                    children: List.generate(3, (index) => Container(
+                        width: 100,
+                        height: 100,
+                        color: Color.fromARGB(255, random.nextInt(256), random.nextInt(256), random.nextInt(256)),
+                    )),
+                )
+            ) : (
+                Row(
+                    children: List.generate(3, (index) => Container(
+                        width: 100,
+                        height: 100,
+                        color: Color.fromARGB(255, random.nextInt(256), random.nextInt(256), random.nextInt(256)),
+                    ))
+                )
+            ),
+        );
+    }
 }

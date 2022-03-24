@@ -3,42 +3,53 @@ import 'package:flutter/material.dart';
 void main() {
   runApp(const MyApp());
 }
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({ Key? key }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
-            appBar: AppBar(
-                title: const Text("Hello world application"),
-            ),
-            body: Column(
-                children: [
-                    buildCard(Icons.account_box, "Account Box"),
-                    buildCard(Icons.android, "Android")
-                ],
-            ),
-        ),
-    );
-  }
+  State<MyApp> createState() => _MyAppState();
+}
 
-  Card buildCard(IconData icon, String text) {
-    // Card is a widget used to create card like a panel in bootstrap
-    return Card(
-        color: Colors.white,
-        elevation: 5,
-        margin: const EdgeInsets.all(6),
-        child: Row(
-            children: [
-                Container(
-                    margin: const EdgeInsets.all(6),
-                    child: Icon(icon),
+class _MyAppState extends State<MyApp> {
+    TextEditingController controller = TextEditingController();
+
+    @override
+    Widget build(BuildContext context) {
+        return MaterialApp(
+            home: Scaffold(
+                appBar: AppBar(
+                    title: const Text("Hello world application"),
                 ),
-                Text(text)
-            ],
-        ),
-    );
-  }
+                body: Container(
+                    margin: const EdgeInsets.all(20),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                            TextField(
+                                decoration: InputDecoration(
+                                    icon: const Icon(Icons.access_alarm),
+                                    // prefix: Container(width: 10, height: 10, color: Colors.green,),
+                                    prefixIcon: const Icon(Icons.adb),
+                                    prefixText: "Name: ",
+                                    prefixStyle: const TextStyle(color: Colors.lightBlue),
+                                    labelText: "Fullname: ", // we must focus it to make it up
+                                    labelStyle: const TextStyle(color: Colors.blueAccent),
+                                    // suffix: Container(width: 10, height: 10, color: Colors.green,),
+                                    hintText: "Enter a name...",
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10)
+                                    )
+                                ),
+                                controller: controller,
+                                onChanged: (value) {
+                                    setState(() {});
+                                },
+                            ),
+                            Text(controller.text)
+                        ],
+                    ),
+                )
+            ),
+        );
+    }
 }

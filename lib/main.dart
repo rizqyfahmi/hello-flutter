@@ -18,162 +18,219 @@ class MyApp extends StatelessWidget {
 class MainPage extends StatelessWidget {
   const MainPage({Key? key}) : super(key: key);
 
+  double getSmallDiameter(BuildContext context) =>
+      MediaQuery.of(context).size.width * (2 / 3);
+
+  double getBigDiameter(BuildContext context) =>
+      MediaQuery.of(context).size.width * (7 / 8);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text("Hello world application"),
+        title: const Text("Login Page"),
         flexibleSpace: FlexibleSpaceBar(
           background: Container(
-            color: Colors.orangeAccent,
+            color: Colors.purple,
           ),
         ),
       ),
       body: Stack(
         children: [
-            Container(
-                decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [
-                            Color.fromRGBO(255, 94, 98, 1),
-                            Color.fromRGBO(255, 153, 102, 1)
-                        ], 
-                    begin: Alignment.topCenter, 
-                    end: Alignment.bottomCenter)),
-            ),
-            Column(
-                children: [
-                    const Spacer(),
-                    Flexible(
-                        flex: 8,
-                        fit: FlexFit.tight,
-                        child: Row(
-                            children: [
-                                const Spacer(),
-                                Flexible(
-                                    flex: 8,
-                                    fit: FlexFit.tight,
-                                    child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Card(
-                                        elevation: 5,
-                                        child: Column(
-                                            children: [
-                                                Flexible(
-                                                    flex: 1,
-                                                    fit: FlexFit.tight,
-                                                    child: Row(
-                                                        children: const [
-                                                        Flexible(
-                                                            flex: 1,
-                                                            fit: FlexFit.tight,
-                                                            child: ClipRRect(
-                                                                borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
-                                                                child: Image(
-                                                                    image: NetworkImage(
-                                                                        "https://cdn.pixabay.com/photo/2018/01/20/08/33/sunset-3094078_960_720.jpg"),
-                                                                    fit: BoxFit.cover,
-                                                                ),
-                                                            ),
-                                                        ),
-                                                        ],
-                                                    )
-                                                ),
-                                                Flexible(
-                                                    flex: 1,
-                                                    fit: FlexFit.tight,
-                                                    child: Stack(
-                                                        children: [
-                                                            Row(
-                                                                children: const [
-                                                                    Flexible(
-                                                                        flex: 1,
-                                                                        fit: FlexFit.tight,
-                                                                        child: Opacity(
-                                                                            opacity: 0.3,
-                                                                            child: Image(
-                                                                                image: AssetImage("images/pattern.png"),
-                                                                                repeat: ImageRepeat.repeat,
-                                                                            ),
-                                                                        ),
-                                                                    ),
-                                                                ],
-                                                            ),
-                                                            Row(
-                                                                children: [
-                                                                    const Spacer(),  
-                                                                    Flexible(
-                                                                        flex: 8,
-                                                                        fit: FlexFit.tight,
-                                                                        child: Column(
-                                                                            children: [
-                                                                                const Spacer(flex: 5),
-                                                                                const Text(
-                                                                                    "Beautiful Sunset at Paddy Field",
-                                                                                    maxLines: 2,
-                                                                                    textAlign: TextAlign.center,
-                                                                                    style: TextStyle(
-                                                                                        color: Color.fromRGBO(255, 94, 98, 1),
-                                                                                        fontSize: 25
-                                                                                    ),
-                                                                                ),
-                                                                                const Spacer(flex: 2),
-                                                                                Row(
-                                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                                    children: const [
-                                                                                        Text(
-                                                                                            "Posted on ",
-                                                                                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                                                                                        ),
-                                                                                        Text(
-                                                                                            "Mar 24, 2021 ",
-                                                                                            style: TextStyle(color: Color.fromRGBO(255, 94, 98, 1), fontSize: 12),
-                                                                                        )
-                                                                                    ],
-                                                                                ),
-                                                                                const Spacer(flex: 1),
-                                                                                Row(
-                                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                                    children: const [
-                                                                                        Spacer(flex: 10),
-                                                                                        Icon(Icons.thumb_up, size: 18, color: Colors.grey),
-                                                                                        Spacer(flex: 1),
-                                                                                        Text(
-                                                                                            "99",
-                                                                                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                                                                                        ),
-                                                                                        Spacer(flex: 5),
-                                                                                        Icon(Icons.comment, size: 18, color: Colors.grey),
-                                                                                        Spacer(flex: 1),
-                                                                                        Text(
-                                                                                            "888",
-                                                                                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                                                                                        ),
-                                                                                        Spacer(flex: 10),
-                                                                                    ],
-                                                                                ),
-                                                                                const Spacer(flex: 5),
-                                                                            ]
-                                                                        ),
-                                                                    ),
-                                                                    const Spacer()
-                                                                ],
-                                                            )
-                                                        ],
-                                                    )
-                                                )
-                                            ],
-                                        ),
-                                        ),
-                                    ),
-                                ),
-                                const Spacer(),
-                            ],
-                        ),
-                    ),
-                    const Spacer(),
-                ],
+          // Positioned is like absolute in css but it can only be used within a Stack and positions a child relative to the Stack size
+          Positioned(
+            top: - getSmallDiameter(context) / 3,
+            right: - getSmallDiameter(context) / 3,
+            child: Container(
+              height: getSmallDiameter(context),
+              width: getSmallDiameter(context),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFFB226B2), Color(0xFFFF6DA7)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter
+                )
+              ),
             )
+          ),
+          // Positioned is like absolute in css but it can only be used within a Stack and positions a child relative to the Stack size
+          Positioned(
+            top: - getBigDiameter(context) / 4,
+            left: - getBigDiameter(context) / 4,
+            child: Container(
+              height: getBigDiameter(context),
+              width: getBigDiameter(context),
+              child: const Center(
+                child: Text(
+                  "dribblee",
+                  style: TextStyle(
+                    fontFamily: "Pacifico",
+                    fontSize: 30,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white
+                  ),
+                ),
+              ),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFFB226B2), Color(0xFFFF6DA7)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter
+                )
+              ),
+            )
+          ),
+          // Positioned is like absolute in css but it can only be used within a Stack and positions a child relative to the Stack size
+          Positioned(
+            bottom: - getBigDiameter(context) / 4,
+            right: - getBigDiameter(context) / 4,
+            child: Container(
+              height: getBigDiameter(context),
+              width: getBigDiameter(context),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFF3E9EE)
+              ),
+            )
+          ),
+          // Align is like Position in css but it can be used everywhere, not only within a Stack.
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ListView(
+              children: [
+                Container(
+                  margin: EdgeInsets.fromLTRB(20, MediaQuery.of(context).size.height * ( 2 / 5 ), 20, 10),
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 25),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(5),
+                    color: Colors.white
+                  ),
+                  child: Column(
+                    children: const [
+                      TextField(
+                        decoration: InputDecoration(
+                          icon: Icon(Icons.email, color: Color(0xFFFF4891)),
+                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFFF4891))),
+                          labelText: "Email: ",
+                          labelStyle: TextStyle(color: Color(0xFFFF4891))
+                        ),
+                      ),
+                      TextField(
+                        obscureText: true,
+                        decoration: InputDecoration(
+                            icon: Icon(Icons.vpn_key, color: Color(0xFFFF4891)),
+                            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFFF4891))),
+                            labelText: "Password: ",
+                            labelStyle: TextStyle(color: Color(0xFFFF4891))),
+                      )
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(0, 0, 20, 20),
+                    child: const Text(
+                      "FORGOT PASSWORD?",
+                      style: TextStyle(
+                        color: Color(0xFFFF4891),
+                        fontSize: 11
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: Container(
+                          // width: MediaQuery.of(context).size.width * 0.5,
+                          // height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFB226B2), Color(0xFFFF4891)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter
+                            )
+                          ),
+                          child: Material(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {},
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                child: const Center(
+                                  child: Text(
+                                    "SIGN IN", 
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700
+                                    )
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Row(
+                          children: const [
+                            Spacer(),
+                            FloatingActionButton(
+                              mini: true,
+                              onPressed: null,
+                              backgroundColor: Colors.blue,
+                              child: Icon(Icons.facebook),
+                            ),
+                            Spacer(),
+                            FloatingActionButton(
+                              mini: true,
+                              onPressed: null,
+                              backgroundColor: Colors.red,
+                              child: Icon(Icons.adobe),
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      "DON'T HAVE AN ACCOUNT? ",
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      "SIGN UP",
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFFF4891),
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
+          )
         ],
       ),
     );

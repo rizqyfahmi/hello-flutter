@@ -1,72 +1,47 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({ Key? key }) : super(key: key);
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final GlobalKey key = GlobalKey(debugLabel: "QR");
-  Barcode? result;
-  QRViewController? controller;
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller!.pauseCamera();
-    } else if (Platform.isIOS) {
-      controller!.resumeCamera();
-    }
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
-
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((event) {
-      result = event;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text("QR Scanner"),
+          title: const Text("ClipPath Image"),
         ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 5,
-                child: QRView(key: key, onQRViewCreated: _onQRViewCreated)
+          child: ClipPath(
+            clipper: MyClipper(),
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              child: const Image(
+                image: NetworkImage("https://u7.uidownload.com/vector/994/571/vector-northern-lights-landscape-vector-svg-eps.jpg"),
               ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text((result != null) ? result!.code.toString() : "Result"),
-                )
-              )
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class MyClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height);
+    path.quadraticBezierTo(size.width / 2, size.height * (1 / 4), size.width, size.height);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+  
 }

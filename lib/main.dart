@@ -1,26 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import 'package:hello_flutter/colorful_button.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({ Key? key }) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text("Generate QR Code"),
+          title: const Text("Transform Application"),
         ),
         body: Center(
-          child: QrImage(
-            data: "https://github.com/rizqyfahmi",
-            foregroundColor: Colors.grey,
-            errorCorrectionLevel: QrErrorCorrectLevel.M,
-            padding: const EdgeInsets.all(30),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: const [
+              ColorfulButton(
+                mainColor: Colors.pink,
+                secondColor: Colors.blue,
+                icon: Icons.adb
+              )
+            ],
           ),
         ),
       ),

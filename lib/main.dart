@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,44 +11,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: DefaultTabController(
-        length: 2, 
-        child: Scaffold(
-          appBar: AppBar(
-            elevation: 0,
-            title: const Text("Custom TabBar"),
-            bottom: PreferredSize(
-              preferredSize: Size.fromHeight(buildTabBar().preferredSize.height),
-              child: Container(
-                color: Colors.amber,
-                child: buildTabBar(),
-              ),
-            ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text("Generate QR Code"),
+        ),
+        body: Center(
+          child: QrImage(
+            data: "https://github.com/rizqyfahmi",
+            foregroundColor: Colors.grey,
+            errorCorrectionLevel: QrErrorCorrectLevel.M,
+            padding: const EdgeInsets.all(30),
           ),
-          body: const TabBarView(
-            children: [
-              Center(
-                child: Text("Tab Home"),
-              ),
-              Center(
-                child: Text("Tab News"),
-              ),
-            ],
-          ),
-        )
-      )
-    );
-  }
-
-  TabBar buildTabBar() {
-    return const TabBar(
-      indicator: BoxDecoration(
-        color: Colors.red
+        ),
       ),
-      tabs: [
-        Tab(icon: Icon(Icons.home), text: "Home"),
-        Tab(icon: Icon(Icons.newspaper), text: "News")
-      ],
     );
   }
 }

@@ -1,5 +1,7 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,17 +15,31 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  AudioPlayer? audioPlayer;
-  String duration = "00:00:00";
+  final GlobalKey key = GlobalKey(debugLabel: "QR");
+  Barcode? result;
+  QRViewController? controller;
 
-  _MyAppState() {
-    audioPlayer = AudioPlayer();  
-    audioPlayer?.onAudioPositionChanged.listen((drs) {
-      setState(() {
-        duration = drs.toString();
-      });
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller!.pauseCamera();
+    } else if (Platform.isIOS) {
+      controller!.resumeCamera();
+    }
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  void _onQRViewCreated(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((event) {
+      result = event;
     });
-    audioPlayer?.setReleaseMode(ReleaseMode.LOOP);
   }
 
   @override
@@ -31,40 +47,22 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text("Music Player"),
+          title: const Text("QR Scanner"),
         ),
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                onPressed: () async {
-                  await audioPlayer?.play("https://luan.xyz/files/audio/ambient_c_motion.mp3");
-                }, 
-                child: const Text("Play")
+              Expanded(
+                flex: 5,
+                child: QRView(key: key, onQRViewCreated: _onQRViewCreated)
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  await audioPlayer?.pause();
-                }, 
-                child: const Text("Pause")
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  await audioPlayer?.stop();
-                  setState(() {
-                    duration = "00:00:00";
-                  });
-                },
-                child: const Text("Stop")
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  await audioPlayer?.resume();
-                },
-                child: const Text("Resume")
-              ),
-              Text(duration)
+              Expanded(
+                flex: 1,
+                child: Center(
+                  child: Text((result != null) ? result!.code.toString() : "Result"),
+                )
+              )
             ],
           ),
         ),

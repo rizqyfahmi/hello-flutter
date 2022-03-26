@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hello_flutter/post_result.dart';
+import 'package:hello_flutter/user.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +13,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  PostResult? postResult;
+  User? user;
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +25,15 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: [
-              Text((postResult != null) ? "${postResult?.id} - ${postResult?.name} - ${postResult?.job} - ${postResult?.created}" : "Tidak ada data"),
+              Text((user != null) ? "${user?.id} - ${user?.name}" : "Tidak ada data"),
               ElevatedButton(
                 onPressed: () async {
-                  final data = await PostResult.saveToAPI("John", "Supervisor");
+                  final data = await User.getFromAPI(2);
                   setState(() {
-                    postResult = data;
+                    user = data;
                   });
                 }, 
-                child: const Text("POST DATA")
+                child: const Text("GET DATA")
               )
             ],
           ),

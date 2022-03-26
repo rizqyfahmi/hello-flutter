@@ -1,3 +1,6 @@
+import 'dart:developer' as developer;
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -12,79 +15,82 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool isActive = false;
-  Widget switcherWidget = Container(
-    height: 100,
-    width: 200,
-    color: Colors.red,
-  );
-  
+  double padding = 0;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text("Switch and AnimatedSwitcher"),
+          title: const Text("AnimatedPadding"),
         ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(seconds: 1),
-                  transitionBuilder: (widget, animation) => RotationTransition(
-                    turns: animation,
-                    child: widget,
-                  ),
-                  child: switcherWidget,
-                )
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Switch(
-                  activeColor: Colors.green,
-                  activeTrackColor: Colors.green.withOpacity(0.3),
-                  inactiveThumbColor: Colors.red,
-                  inactiveTrackColor: Colors.red.withOpacity(0.5),
-                  value: isActive, 
-                  onChanged: (value) {
-                    if (value) {
-                      return setState(() {
-                        isActive = value;
-                        switcherWidget = Container(
-                          key: const ValueKey(1), // we need to put key when we use same widget (Container vs Container, etc)
-                          height: 100,
-                          width: 200,
+        body: GestureDetector(
+          onTap: () {
+            Random random = Random();
+            setState(() {
+              padding = double.parse((10 + random.nextInt(30)).toString());
+            });
+          },
+          child: Column(
+            children: [
+              Expanded(
+                flex: 1,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: AnimatedPadding(
+                        duration: const Duration(seconds: 1),
+                        padding: EdgeInsets.all(padding),
+                        child: Container(
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: AnimatedPadding(
+                        duration: const Duration(seconds: 1),
+                        padding: EdgeInsets.all(padding),
+                        child: Container(
                           color: Colors.green,
-                        );
-                        // switcherWidget = const SizedBox(
-                        //   height: 100,
-                        //   width: 200,
-                        //   child: Center(
-                        //     child: Text("Switch On"),
-                        //   )
-                        // );
-                      });  
-                    }
-
-                    setState(() {
-                      isActive = value;
-                      switcherWidget = Container(
-                        key: const ValueKey(2), // we need to put key when we use same widget (Container vs Container, etc)
-                        height: 100,
-                        width: 200,
-                        color: Colors.red,
-                      );
-                    });
-                  }
+                        ),
+                      ),
+                    )
+                  ],
                 ),
-              ],
-            )
-          ],
+              ),
+              Expanded(
+                flex: 1,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: AnimatedPadding(
+                        duration: const Duration(seconds: 1),
+                        padding: EdgeInsets.all(padding),
+                        child: Container(
+                          padding: EdgeInsets.all(padding),
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: AnimatedPadding(
+                        duration: const Duration(seconds: 1),
+                        padding: EdgeInsets.all(padding),
+                        child: Container(
+                          padding: EdgeInsets.all(padding),
+                          color: Colors.yellow,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

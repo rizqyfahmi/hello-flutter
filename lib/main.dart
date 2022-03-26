@@ -1,7 +1,5 @@
-import 'dart:developer' as developer;
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,83 +13,57 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  double padding = 0;
+  bool isActive = false;
+  TextEditingController controller = TextEditingController();
+
+  void setData() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    pref.setString("name", controller.text);
+    pref.setBool("isActive", isActive);
+  }
+
+  void getData() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    setState(() {
+      controller.text = pref.getString("name") ?? "";
+      isActive = pref.getBool("isActive") ?? false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text("AnimatedPadding"),
+          title: const Text("Shared Preferences App"),
         ),
-        body: GestureDetector(
-          onTap: () {
-            Random random = Random();
-            setState(() {
-              padding = double.parse((10 + random.nextInt(30)).toString());
-            });
-          },
-          child: Column(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: AnimatedPadding(
-                        duration: const Duration(seconds: 1),
-                        padding: EdgeInsets.all(padding),
-                        child: Container(
-                          color: Colors.red,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: AnimatedPadding(
-                        duration: const Duration(seconds: 1),
-                        padding: EdgeInsets.all(padding),
-                        child: Container(
-                          color: Colors.green,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: AnimatedPadding(
-                        duration: const Duration(seconds: 1),
-                        padding: EdgeInsets.all(padding),
-                        child: Container(
-                          padding: EdgeInsets.all(padding),
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: AnimatedPadding(
-                        duration: const Duration(seconds: 1),
-                        padding: EdgeInsets.all(padding),
-                        child: Container(
-                          padding: EdgeInsets.all(padding),
-                          color: Colors.yellow,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        body: Column(
+          children: [
+            TextField(
+              controller: controller,
+            ),
+            Switch(
+              value: isActive,
+              onChanged: (value) {
+                setState(() {
+                  isActive = value;
+                });
+              }
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setData();
+              },
+              child: const Text("Save Data")
+            ),
+            ElevatedButton(
+              onPressed: () {
+                getData();
+              },
+              child: const Text("Load Data")
+            ),
+          ],
+        )
       ),
     );
   }

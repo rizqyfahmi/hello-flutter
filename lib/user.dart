@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class User {
@@ -11,23 +11,24 @@ class User {
   factory User.createUser(Map<String, dynamic> data) {
     return User(
       id: data["id"],
-      name: "${data["first_name"]} ${data["last_name"]}"
+      name: data["name"]
     );
   }
 
-  static Future<User> getFromAPI(int id) async {
-    
+  static Future<List<User>> getListFromAPI({int page = 1}) async {
     final uri = Uri(
       scheme: "https",
       host: "reqres.in",
-      path: "api/users/$id"
+      path: "api/users?page=$page"
     );
 
     final response = await http.get(uri);
     final body = json.decode(response.body);
-    final data = (body as Map<String, dynamic>)["data"];
-
-    return User.createUser(data);
+    final List<dynamic> data = (body as Map<String, dynamic>)["data"];
+    // Convert dynamic into List of Map<String, dynamic> using "from"
+    final List<Map<String, dynamic>> mapData = List<Map<String, dynamic>>.from(data);
+    final List<User> users = mapData.map((row) => User.createUser(row)).toList();
+    return users;
 
   }
 }

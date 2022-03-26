@@ -13,7 +13,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  User? user;
+  List<User> users = [];
+
+  List<Widget> buildList() {
+    return users.map((user) => Text(user.name)).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +29,20 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: [
-              Text((user != null) ? "${user?.id} - ${user?.name}" : "Tidak ada data"),
               ElevatedButton(
                 onPressed: () async {
-                  final data = await User.getFromAPI(2);
+                  final data = await User.getListFromAPI(page: 1);
                   setState(() {
-                    user = data;
+                    users = data;
                   });
                 }, 
                 child: const Text("GET DATA")
+              ),
+              Expanded(
+                flex: 1,
+                child: ListView(
+                  children: buildList(),
+                ),
               )
             ],
           ),

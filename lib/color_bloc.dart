@@ -1,36 +1,18 @@
-import 'dart:async';
-
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:bloc/bloc.dart';
 
-enum ColorEvent {
-  toAmber, toLightBlue
+class ColorEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
 }
 
-class ColorBloc {
-  Color _color = Colors.amber;
-  StreamController<ColorEvent> _eventController = StreamController<ColorEvent>();
-  StreamSink<ColorEvent> get eventSink => _eventController.sink;
+class ColorAmber extends ColorEvent {}
+class ColorLightBlue extends ColorEvent {}
 
-  StreamController<Color> _stateController = StreamController<Color>();
-  StreamSink<Color> get _stateSink => _stateController.sink;
-  Stream<Color> get stateStream => _stateController.stream;
-
-  void _mapEventToState(ColorEvent colorEvent) {
-    if (colorEvent == ColorEvent.toAmber) {
-      _color = Colors.amber;
-    } else {
-      _color = Colors.lightBlue;
-    }
-
-    _stateSink.add(_color);
-  }
-
-  ColorBloc() {
-    _eventController.stream.listen(_mapEventToState);
-  }
-
-  void dispose() {
-    _eventController.close();
-    _stateController.close();
+class ColorBloc extends Bloc<ColorEvent, Color> {
+  ColorBloc(Color initialState) : super(initialState) {
+    on<ColorAmber>((event, emit) => emit(Colors.amber));
+    on<ColorLightBlue>((event, emit) => emit(Colors.lightBlue));
   }
 }

@@ -1,23 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hello_flutter/model/user.dart';
-import 'package:hello_flutter/view/main_page.dart';
-import 'package:hello_flutter/view_model/user/user_bloc.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+
   const MyApp({ Key? key }) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final List<String> names = ["John", "Siera", "Monica"];
+  String? selectedName;
+
+  List<DropdownMenuItem<String>> buildDropdownMenuItem(List<String> names) {
+    return names.map((String name) => (
+      DropdownMenuItem<String>(
+        child: Text(name),
+        value: name,
+      )
+    )).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: BlocProvider<UserBloc>(
-        create: (context) => UserBloc(UninitializedUser()),
-        child: MainPage()
-      ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text("DropdownButton Demo"),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<String>(
+                items: buildDropdownMenuItem(names),
+                value: selectedName,
+                onChanged: (String? value) {
+                  setState(() {
+                    selectedName = value;
+                  });
+                }
+              ),
+              Text(selectedName ?? "Belum ada yang terpilih")
+            ],
+          ),
+        ),
+      )
     );
   }
 }

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:hello_flutter/mobx/counter.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -11,14 +9,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: MainPage(),
     );
   }
 }
 
 class MainPage extends StatefulWidget {
-
   const MainPage({
     Key? key,
   }) : super(key: key);
@@ -28,39 +25,21 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final Counter counter = Counter();
+  PageController controller = PageController();
+  List<Color> colors = [Colors.red, Colors.green, Colors.blue];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("MobX state management"),
+        title: const Text("PageView Demo"),
       ),
-      body: Observer(
-        builder: (context) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("${counter.nominal}", style: TextStyle(fontSize: 80)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FloatingActionButton(
-                    onPressed: () {
-                      counter.increament();
-                    },
-                    child: const Icon(Icons.arrow_upward),
-                  ),
-                  const SizedBox(width: 10),
-                  FloatingActionButton(
-                    onPressed: () {
-                      counter.decreament();
-                    },
-                    child: const Icon(Icons.arrow_downward),
-                  )
-                ],
-              )
-            ],
+      body: PageView.builder(
+        controller: controller,
+        itemCount: colors.length,
+        itemBuilder: (context, index) {
+          return Container(
+            color: colors[index],
           );
         },
       ),

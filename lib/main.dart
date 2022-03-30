@@ -25,7 +25,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  PageController controller = PageController();
+  PageController controller = PageController(initialPage: 1);
   List<Color> colors = [Colors.red, Colors.green, Colors.blue];
 
   @override

@@ -9,15 +9,12 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({ Key? key }) : super(key: key);
-
+  
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: rootBundle.loadString("assets/env/.env_development"),
-      builder: (context, snapshot) => MaterialApp(
-        debugShowCheckedModeBanner: dotenv.env["MODE"] == "development",
-        home: MainPage(),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: (dotenv.env["MODE"] ?? "") == "development",
+      home: MainPage(),
     );
   }
 }

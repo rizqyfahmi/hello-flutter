@@ -30,6 +30,8 @@ dependencies:
   flutter:
     sdk: flutter
   mockito: ^5.1.0
+  equatable: ^2.0.3
+  http: ^0.13.4
   flutter_dotenv: ^5.0.2
 
 

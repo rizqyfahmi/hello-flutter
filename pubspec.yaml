@@ -29,9 +29,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  mockito: ^5.1.0
-  equatable: ^2.0.3
-  http: ^0.13.4
+  bloc: ^8.0.3
+  flutter_bloc: ^8.0.1
+  bloc_test: ^9.0.3
   flutter_dotenv: ^5.0.2
 
 

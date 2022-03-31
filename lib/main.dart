@@ -1,42 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shimmer/shimmer.dart';
 
 void main() async {
-  await dotenv.load(fileName: "assets/env/.env_production");
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({ Key? key }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: (dotenv.env["MODE"] ?? "") == "development",
-      home: MainPage(),
-    );
-  }
-}
-
-class MainPage extends StatelessWidget {
-  const MainPage({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Dot env demo"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("${dotenv.env["MODE"]}",style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text("${dotenv.env["LANGUAGE"]}",style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.grey))
-          ],
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text("Shimmer Demo"),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                children: [
+                  const SizedBox(
+                    width: 200,
+                    height: 300,
+                    child: Image(
+                      image: NetworkImage("https://s1.bukalapak.com/img/68286857232/large/Poster_Film___Avengers_Endgame___Marvel_Studios___Movie_Post.jpg"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Shimmer(
+                    direction: ShimmerDirection.ltr,
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      stops: const [0.4, 0.5, 0.6],
+                      colors: [
+                        Colors.white.withOpacity(0),
+                        Colors.grey.withOpacity(0.5),
+                        Colors.white.withOpacity(0),
+                      ]
+                    ),
+                    child: Container(
+                      width: 200,
+                      height: 300,
+                      color: Colors.red
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );

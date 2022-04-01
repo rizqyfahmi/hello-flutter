@@ -1,7 +1,9 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hello_flutter/cubit/counter_cubit.dart';
+import 'package:hello_flutter/cubit/counter_state.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -18,59 +20,65 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MainPage extends StatefulWidget {
-  
-  const MainPage({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance?.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance?.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    // When application is minimized (user taps vertical bar button in the bottom menu (android))
-    if (state == AppLifecycleState.inactive) {
-      log("=====> INACTIVE <=====");
-    }
-
-    // When application is hidden
-    if (state == AppLifecycleState.paused) {
-      log("=====> PAUSED <=====");
-    }
-
-    // When application is opened after it's hidden
-    if (state == AppLifecycleState.resumed) {
-      log("=====> RESUMED <=====");
-    }
-  }
+class MainPage extends StatelessWidget {
+  const MainPage({ Key? key }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Application Lifecycle"),
-      ),
-      body: const Center(
-        child: Text(
-          "Application Lifecycle"
+    return BlocProvider(
+      create: (context) => CounterCubit(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Cubit State Management"),
+        ),
+        body: BlocBuilder<CounterCubit, CounterState>(
+          builder: (context, state) {
+            int value = 0;
+            if (state is LoadedState) {
+              value = state.amount;
+            }
+
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "$value",
+                    style: const TextStyle(fontSize: 50),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FloatingActionButton(
+                        onPressed: () {
+                          /*
+                            Cubit is a part of BLoC. The clear difference between Cubit and BLoC are the way it changes the state
+                            - Cubit is method-driven state management. Cubit calls its method to change the state
+                            - BLoC is event-driven state management. BLoC passes a BLoC event to change the state
+                          */
+                          context.read<CounterCubit>().increament();
+                        },
+                        child: const Icon(Icons.arrow_upward),
+                      ),
+                      const SizedBox(width: 10),
+                      FloatingActionButton(
+                        onPressed: () {
+                          /*
+                            Cubit is a part of BLoC. The clear difference between Cubit and BLoC are the way it changes the state
+                            - Cubit is method-driven state management. Cubit calls its method to change the state
+                            - BLoC is event-driven state management. BLoC passes a BLoC event to change the state
+                          */
+                          context.read<CounterCubit>().decreament();
+                        },
+                        child: const Icon(Icons.arrow_downward),
+                      )
+                    ],
+                  )
+                ],
+              ),
+            );
+          }, 
         ),
       ),
     );

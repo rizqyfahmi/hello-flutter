@@ -1,9 +1,15 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hello_flutter/main_page.dart';
 
 class ThirdPage extends StatelessWidget {
-  const ThirdPage({ Key? key }) : super(key: key);
+  ThirdPage({ Key? key }) : super(key: key) {
+    
+    log("${Get.arguments.toString()}");
+    log("${Get.parameters.toString()}");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +23,7 @@ class ThirdPage extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                Get.offAll(() => const MainPage());
+                Get.offAllNamed("/main");
               } , 
               child: const Text("Back to Main Page")
             ),

@@ -17,7 +17,7 @@ class LoginPage extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                Get.off(() => const MainPage(), transition: Transition.zoom);
+                Get.offNamed("/main");
               }, 
               child: const Text("Login")
             )

@@ -19,7 +19,7 @@ class MainPage extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () async {
-                final result = await Get.to<String>(() => const SecondPage(), transition: Transition.downToUp);
+                final result = await Get.toNamed("/second");
                 log("====> $result");
               } , 
               child: const Text("Second Page")

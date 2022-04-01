@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -10,47 +12,65 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Shimmer Demo"),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Stack(
-                children: [
-                  const SizedBox(
-                    width: 200,
-                    height: 300,
-                    child: Image(
-                      image: NetworkImage("https://s1.bukalapak.com/img/68286857232/large/Poster_Film___Avengers_Endgame___Marvel_Studios___Movie_Post.jpg"),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Shimmer(
-                    direction: ShimmerDirection.ltr,
-                    gradient: LinearGradient(
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      stops: const [0.4, 0.5, 0.6],
-                      colors: [
-                        Colors.white.withOpacity(0),
-                        Colors.grey.withOpacity(0.5),
-                        Colors.white.withOpacity(0),
-                      ]
-                    ),
-                    child: Container(
-                      width: 200,
-                      height: 300,
-                      color: Colors.red
-                    ),
-                  ),
-                ],
-              )
-            ],
-          ),
+    return const MaterialApp(
+      home: MainPage(),
+    );
+  }
+}
+
+class MainPage extends StatefulWidget {
+  
+  const MainPage({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance?.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // When application is minimized (user taps vertical bar button in the bottom menu (android))
+    if (state == AppLifecycleState.inactive) {
+      log("=====> INACTIVE <=====");
+    }
+
+    // When application is hidden
+    if (state == AppLifecycleState.paused) {
+      log("=====> PAUSED <=====");
+    }
+
+    // When application is opened after it's hidden
+    if (state == AppLifecycleState.resumed) {
+      log("=====> RESUMED <=====");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Application Lifecycle"),
+      ),
+      body: const Center(
+        child: Text(
+          "Application Lifecycle"
         ),
       ),
     );

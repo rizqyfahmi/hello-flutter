@@ -22,7 +22,7 @@ class SecondPage extends StatelessWidget {
           children: [
             Obx(() {
               return Text(
-                "${controller.amount}",
+                "${controller.counter.value.amount}",
                 style: const TextStyle(fontSize: 50)
               );
             }),

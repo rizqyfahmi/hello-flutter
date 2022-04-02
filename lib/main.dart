@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hello_flutter/fourth_page.dart';
 import 'package:hello_flutter/login_page.dart';
 import 'package:hello_flutter/main_page.dart';
 import 'package:hello_flutter/second_page.dart';
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/main", page: () => MainPage()),
         GetPage(name: "/second", page: () => SecondPage()),
         GetPage(name: "/third", page: () => ThirdPage()),
+        GetPage(name: "/fourth", page: () => FourthPage())
       ],
     );
   }

@@ -21,19 +21,23 @@ class MainPage extends StatelessWidget {
             GetBuilder<CounterSimpleController>(
               id: "hello", // It will change becasue we set update(["hello"]) at CounterSimpleController
               init: CounterSimpleController(),
+              initState: (_) {
+                log("--> Initial State");
+              },
+              didChangeDependencies: (_) {
+                log("--> didChangeDependencies");
+              },
+              didUpdateWidget: (_, state) {
+                log("--> ${state.toString()}"); // It's only work in Statefull widget when we do setState(() { })
+              },
+              dispose: (_) {
+                log("--> Dispose");
+              },
               builder: (controller) => Text(
                 "${controller.counter.amount}",
                 style: const TextStyle(
                   fontSize: 50
                 ),
-              ),
-            ),
-            // It will "never" change because we set update(["hello"]) at CounterSimpleController
-            GetBuilder<CounterSimpleController>(
-              init: CounterSimpleController(),
-              builder: (controller) => Text(
-                "${controller.counter.amount}",
-                style: const TextStyle(fontSize: 50),
               ),
             ),
             const SizedBox(height: 10),
@@ -62,7 +66,14 @@ class MainPage extends StatelessWidget {
                 log("====> $result");
               } , 
               child: const Text("Second Page")
-            )
+            ),
+            // Used to demonstrate dispose in GetX lifecycle
+            const SizedBox(height: 10),
+            ElevatedButton(
+            onPressed: () {
+              Get.offNamed("/login");
+            },
+            child: const Text("Logout"))
           ],
         ),
       ),

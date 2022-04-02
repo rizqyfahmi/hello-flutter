@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       getPages: [
         GetPage(name: "/login", page: () => const LoginPage(), transition: Transition.zoom),
         GetPage(name: "/main", page: () => MainPage()),
-        GetPage(name: "/second", page: () => const SecondPage()),
+        GetPage(name: "/second", page: () => SecondPage()),
         GetPage(name: "/third", page: () => ThirdPage()),
       ],
     );

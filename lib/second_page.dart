@@ -20,15 +20,12 @@ class SecondPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            GetX<CounterReactiveController>(
-              init: CounterReactiveController(),
-              builder: (controller) {
-                return Text(
-                  "${controller.amount}",
-                  style: const TextStyle(fontSize: 50)
-                );
-              },
-            ),
+            Obx(() {
+              return Text(
+                "${controller.amount}",
+                style: const TextStyle(fontSize: 50)
+              );
+            }),
             const SizedBox(width: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

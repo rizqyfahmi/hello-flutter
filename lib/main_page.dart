@@ -22,7 +22,7 @@ class MainPage extends StatelessWidget {
             GetBuilder<CounterSimpleController>(
               init: CounterSimpleController(),
               builder: (controller) => Text(
-                "${controller.amount}",
+                "${controller.counter.amount}",
                 style: const TextStyle(
                   fontSize: 50
                 ),

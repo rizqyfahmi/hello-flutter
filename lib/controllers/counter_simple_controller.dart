@@ -6,11 +6,11 @@ class CounterSimpleController extends GetxController {
 
   void increament() {
     counter.amount += 1;
-    update(); // Add this line to notify the observer that the state is changed
+    update(["hello"]); // Add this line to notify the observer that the state is changed
   }
 
   void decreament() {
     counter.amount -= 1;
-    update(); // Add this line to notify the observer that the state is changed
+    update(["hello"]); // Add this line to notify the observer that the state is changed
   }
 }

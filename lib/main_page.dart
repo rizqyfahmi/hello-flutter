@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hello_flutter/controllers/counter_simple_controller.dart';
-import 'package:hello_flutter/second_page.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({ Key? key }) : super(key: key);
@@ -20,12 +19,21 @@ class MainPage extends StatelessWidget {
           children: [
             // In the simple state management approach we use GetBuilder to observe the change of state
             GetBuilder<CounterSimpleController>(
+              id: "hello", // It will change becasue we set update(["hello"]) at CounterSimpleController
               init: CounterSimpleController(),
               builder: (controller) => Text(
                 "${controller.counter.amount}",
                 style: const TextStyle(
                   fontSize: 50
                 ),
+              ),
+            ),
+            // It will "never" change because we set update(["hello"]) at CounterSimpleController
+            GetBuilder<CounterSimpleController>(
+              init: CounterSimpleController(),
+              builder: (controller) => Text(
+                "${controller.counter.amount}",
+                style: const TextStyle(fontSize: 50),
               ),
             ),
             const SizedBox(height: 10),

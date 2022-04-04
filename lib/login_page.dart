@@ -20,6 +20,19 @@ class LoginPage extends StatelessWidget {
                 Get.offNamed("/main");
               }, 
               child: const Text("Login")
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                // Note that we must use GetMaterialApp
+                Get.snackbar(
+                  "Hello Title", 
+                  "Hello Message",
+                  snackPosition: SnackPosition.BOTTOM,
+                  snackStyle: SnackStyle.FLOATING,
+                );
+              },
+              child: const Text("Open SnackBar")
             )
           ],
         ),

@@ -60,7 +60,7 @@ class SecondPage extends StatelessWidget {
                 const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: () {
-                    Get.toNamed("/third?language=Indonesia",
+                    Get.toNamed("/third/1/Indonesia?language=Bahasa Indonesia",
                         arguments: ["Hello", "World"]);
                   },
                   child: const Text("Third Page")

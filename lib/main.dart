@@ -39,9 +39,8 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       vsync: this
     );
 
-    _animation = Tween<double>(begin: 0, end: 2 * pi).animate(_controller)..addListener(() {
-      setState(() {});
-    });
+    // We don't have to call setState();
+    _animation = Tween<double>(begin: 0, end: 2 * pi).animate(_controller);
   }
 
   @override
@@ -55,12 +54,15 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              child: Transform.rotate(
-                angle: _animation.value,
-                child:  Container(
-                  height: 100,
-                  width: 100,
-                  color: Colors.green,
+              child: AnimatedBuilder(
+                animation: _animation,
+                builder: (context, child) => Transform.rotate(
+                  angle: _animation.value,
+                  child:  Container(
+                    height: 100,
+                    width: 100,
+                    color: Colors.green,
+                  ),
                 ),
               ),
             ),

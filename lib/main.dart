@@ -28,7 +28,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin{
   late AnimationController _controller;
-  late Animation _animation;
+  late Animation<double> _animation;
 
   @override
   void initState() {
@@ -54,17 +54,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              child: AnimatedBuilder(
-                animation: _animation,
-                builder: (context, child) => Transform.rotate(
-                  angle: _animation.value,
-                  child:  Container(
-                    height: 100,
-                    width: 100,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
+              child: RotatedContainer(animation: _animation),
             ),
             const SizedBox(height: 50),
             Row(
@@ -91,6 +81,29 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
             )
           ],
         ),
+      ),
+    );
+  }
+}
+
+// AnimatedWidget is an abstract class that let us to seperated a specific custom animation that we build
+class RotatedContainer extends AnimatedWidget {
+  const RotatedContainer({
+    Key? key,
+    required Animation<double> animation,
+  }) : super(key: key, listenable: animation);
+
+
+  @override
+  Widget build(BuildContext context) {
+    Animation animation = listenable as Animation<double>;
+
+    return Transform.rotate(
+      angle: animation.value,
+      child: Container(
+        height: 100,
+        width: 100,
+        color: Colors.green,
       ),
     );
   }

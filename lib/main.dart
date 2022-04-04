@@ -1,12 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hello_flutter/fourth_page.dart';
-import 'package:hello_flutter/login_page.dart';
-import 'package:hello_flutter/main_page.dart';
-import 'package:hello_flutter/route_name.dart' ;
-import 'package:hello_flutter/second_page.dart';
-import 'package:hello_flutter/third_page.dart';
-
 void main() async {
   runApp(const MyApp());
 }
@@ -16,15 +11,85 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      initialRoute: "/login",
-      getPages: [
-        GetPage(name: RouteName.login, page: () => const LoginPage(), transition: Transition.zoom),
-        GetPage(name: RouteName.main, page: () => const MainPage()),
-        GetPage(name: RouteName.second, page: () => SecondPage()),
-        GetPage(name: "${RouteName.third}/:id/:country?", page: () => ThirdPage()),
-        GetPage(name: RouteName.fourth, page: () => FourthPage())
-      ],
+    return MaterialApp(
+      home: MainPage()
+    );
+  }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin{
+  late AnimationController _controller;
+  late Animation _animation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this
+    );
+
+    _animation = Tween<double>(begin: 0, end: 2 * pi).animate(_controller)..addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Animation Basic"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              child: Transform.rotate(
+                angle: _animation.value,
+                child:  Container(
+                  height: 100,
+                  width: 100,
+                  color: Colors.green,
+                ),
+              ),
+            ),
+            const SizedBox(height: 50),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(onPressed: () {
+                    _controller.forward();
+                  }, 
+                  child: const Text("Play")
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(onPressed: () {
+                    _controller.repeat();
+                  }, 
+                  child: const Text("Play Repeatedly")
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(onPressed: () {
+                    _controller.stop();
+                  }, 
+                  child: const Text("Stop")
+                )
+              ],
+            )
+          ],
+        ),
+      ),
     );
   }
 }

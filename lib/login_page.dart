@@ -8,6 +8,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text("Login Page"),
       ),
@@ -75,6 +76,70 @@ class LoginPage extends StatelessWidget {
                   child: const Text("General Dialog")
                 )
               ],
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Get.bottomSheet(
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Colors.green,
+                      child: ListView(
+                        children: const [
+                          TextField(
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.all(15),
+                              border: OutlineInputBorder()
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(15),
+                              border: OutlineInputBorder()
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(15),
+                              border: OutlineInputBorder()
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(15),
+                              border: OutlineInputBorder()
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(15),
+                              border: OutlineInputBorder()
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(15),
+                              border: OutlineInputBorder()
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                        ],
+                      ),
+                    ),
+                  )
+                );
+              },
+              child: const Text("BottomSheet")
             )
           ],
         ),

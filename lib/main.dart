@@ -1,9 +1,18 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/*
+  - This is pretty much the most basic kind of Provider
+  - It can hold any type of data but it isn't very complex
+  - It can't change it from the outside, like somewhere in your Widget's build method
+  - We can use ref.watch to monitor other Providers and change its value from inside it though
+*/ 
+final helloProvider = Provider((ref) => "Hello World");
+
 void main() async {
-  runApp(const MyApp());
+  // For widgets to be able to read providers, we need to wrap the entire application in a "ProviderScope" widget.
+  // This is where the state of our providers will be stored.
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -11,99 +20,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MainPage()
+    return const MaterialApp(
+      home: HomePage(),
     );
   }
 }
 
-class MainPage extends StatefulWidget {
-  const MainPage({
-    Key? key,
-  }) : super(key: key);
+class HomePage extends ConsumerWidget {
+  const HomePage({ Key? key }) : super(key: key);
 
   @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin{
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this
-    );
-
-    // We don't have to call setState();
-    _animation = Tween<double>(begin: 0, end: 2 * pi).animate(_controller);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    String hello = ref.watch(helloProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Animation Basic"),
+        title: const Text("Riverpod's Provider"),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              child: RotatedContainer(animation: _animation),
-            ),
-            const SizedBox(height: 50),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(onPressed: () {
-                    _controller.forward();
-                  }, 
-                  child: const Text("Play")
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(onPressed: () {
-                    _controller.repeat();
-                  }, 
-                  child: const Text("Play Repeatedly")
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(onPressed: () {
-                    _controller.stop();
-                  }, 
-                  child: const Text("Stop")
-                )
-              ],
-            )
-          ],
+        child: Text(
+          hello,
+          style: const TextStyle(
+            fontSize: 18
+          ),
         ),
-      ),
-    );
-  }
-}
-
-// AnimatedWidget is an abstract class that let us to seperated a specific custom animation that we build
-class RotatedContainer extends AnimatedWidget {
-  const RotatedContainer({
-    Key? key,
-    required Animation<double> animation,
-  }) : super(key: key, listenable: animation);
-
-
-  @override
-  Widget build(BuildContext context) {
-    Animation animation = listenable as Animation<double>;
-
-    return Transform.rotate(
-      angle: animation.value,
-      child: Container(
-        height: 100,
-        width: 100,
-        color: Colors.green,
       ),
     );
   }

@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hello_flutter/model/todo.dart';
 
-class TodoNotifier extends ChangeNotifier {
-  final List<Todo> todos = [];
+class TodoNotifier extends StateNotifier<List<Todo>> {
+  TodoNotifier() : super([]);
 
   void addTodo(Todo todo) {
-    todos.add(todo);
-    notifyListeners();
+    state = [...state, todo];
   }
 
   void removeTodo(String todoId) {
-    todos.remove(todos.firstWhere((element) => element.id == todoId));
-    notifyListeners();
+    state = state.where((element) => element.id != todoId).toList();
   }
   
   void toggleTodo(String todoId) {
-    for (final Todo todo in todos) {
-      if (todo.id == todoId) {
-        todo.completed = !todo.completed;
-        notifyListeners();
-        break;
+    state = state.map((element) {
+      if (element.id == todoId) {
+        return element.copyWith(completed: !element.completed);
       }
-    }
+      return element;
+    }).toList();
   }
 }

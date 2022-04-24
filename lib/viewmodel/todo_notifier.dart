@@ -1,24 +1,21 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
+
 import 'package:hello_flutter/model/todo.dart';
+import 'package:http/http.dart' as http;
 
-class TodoNotifier extends StateNotifier<List<Todo>> {
-  TodoNotifier() : super([]);
+class TodoNotifier {
+  Future<List<Todo>> getTodos() async {
+    final response = await http.get(Uri.parse("https://jsonplaceholder.typicode.com/todos"));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load Todo');
+    }
 
-  void addTodo(Todo todo) {
-    state = [...state, todo];
-  }
-
-  void removeTodo(String todoId) {
-    state = state.where((element) => element.id != todoId).toList();
-  }
-  
-  void toggleTodo(String todoId) {
-    state = state.map((element) {
-      if (element.id == todoId) {
-        return element.copyWith(completed: !element.completed);
-      }
-      return element;
+    final body = jsonDecode(response.body);
+    final List<Map<String, dynamic>> data = List<Map<String, dynamic>>.from(body);
+    final List<Todo> todos = data.map((element) {
+      return Todo(id: "${element["id"]}", description: element["title"], completed: element["completed"]);
     }).toList();
+
+    return todos;
   }
 }

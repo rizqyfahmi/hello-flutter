@@ -7,11 +7,11 @@ import 'package:hello_flutter/viewmodel/todo_notifier.dart';
 
 /*
   It is typically used for:
-  - It can be used for more complex data
-  - Centralizing the logic for modifying some state (aka "business logic") in a single place, improving maintainability over time
-  - Unlike "ChangeNotifierProvider", StateNotifierProvider exposing an immutable state
+  - Performing and caching asynchronous operations (such as network requests)
+  - Nicely handling error/loading states of asynchronous operations
+  - Combining multiple asynchronous values into another value
 */ 
-final todoProvider = StateNotifierProvider<TodoNotifier, List<Todo>>((ref) => TodoNotifier());
+final todoProvider = FutureProvider<List<Todo>>((ref) async => TodoNotifier().getTodos());
 
 void main() async {
   // For widgets to be able to read providers, we need to wrap the entire application in a "ProviderScope" widget.
@@ -35,58 +35,38 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<Todo> todos = ref.watch<List<Todo>>(todoProvider);
+    AsyncValue<List<Todo>> todo = ref.watch(todoProvider);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Riverpod's StateNotifierProvider"),
+        title: const Text("Riverpod's FutureProvider"),
       ),
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  final random = Random();
-                  final randomResult = random.nextInt(100) + 10;
-                  final todo = Todo(id: "$randomResult", description: "$randomResult", completed: false);
-                  ref.read(todoProvider.notifier).addTodo(todo);
-                }, 
-                child: const Text("Generate Todo")
-              )
-            ],
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: todos.length,
-              itemBuilder: (context, index) {
-                return Row(
-                  children: [
-                    Expanded(
-                      child: CheckboxListTile(
-                        title: Text("${todos[index].description} ${todos[index].completed}"),
-                        value: todos[index].completed, 
-                        onChanged: (_) => {
-                          ref.read(todoProvider.notifier).toggleTodo(todos[index].id)
-                        }
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        ref.read(todoProvider.notifier).removeTodo(todos[index].id);
-                      }, 
-                      icon: const Icon(
-                        Icons.remove_circle,
-                        color: Colors.red,
-                      )
-                    )
-                  ],
-                );
-              },
+      body: todo.when(data: (todos) {
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: todos.length,
+                itemBuilder: (context, index) {
+                  return Text(todos[index].description);
+                },
+              ),
             ),
+          ],
+        );
+      }, error: (err, stack) {
+        return Text('Error: $err');
+      }, 
+      loading: () {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              CircularProgressIndicator(),
+            ],
           )
-        ],
-      )
+        );
+      })
     );
   }
 }

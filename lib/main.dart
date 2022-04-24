@@ -1,12 +1,21 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hello_flutter/model/todo.dart';
+import 'package:hello_flutter/viewmodel/todo_notifier.dart';
 
 /*
-  - This is more step up from Provider, we can actually change its value from the outside
-  - Designed to avoid having to write a StateNotifier class for very simple use-cases.
-  - Use for simple data like String, number, boolean
+  It is typically used for:
+  - It can be used for more complex data
+  - Centralizing the logic for modifying some state (aka "business logic") in a single place, improving maintainability over time
+  - Exposing an mutable state (Downside: We are able to change the state make it harder to maintain)
+    Downside:
+    - We need to manually notify for updates using the notifyListeners method
+    - We are able to change the state make it harder to maintain. This will change the state from 
+      outside without notifying our listeners and hence the UI won't rebuild then we can't see the change of state in the UI
 */ 
-final counterProvider = StateProvider<int>((ref) => 0);
+final todoProvider = ChangeNotifierProvider<TodoNotifier>((ref) => TodoNotifier());
 
 void main() async {
   // For widgets to be able to read providers, we need to wrap the entire application in a "ProviderScope" widget.
@@ -30,48 +39,60 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    int counter = ref.watch<int>(counterProvider);
+    List<Todo> todos = ref.watch<TodoNotifier>(todoProvider).todos;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Riverpod's StateProvider"),
+        title: const Text("Riverpod's ChangeNotifierProvider"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "$counter",
-              style: const TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w700
-              ),
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  final random = Random();
+                  final randomResult = random.nextInt(100) + 10;
+                  final todo = Todo(id: "$randomResult", description: "$randomResult", completed: false);
+                  ref.read(todoProvider).addTodo(todo);
+                  // we can do this but it won't change the UI because we don't do notifyListeners()
+                  // ref.read(todoProvider).todos.add(todo);
+                }, 
+                child: const Text("Generate Todo")
+              )
+            ],
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: todos.length,
+              itemBuilder: (context, index) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: CheckboxListTile(
+                        title: Text("${todos[index].description} ${todos[index].completed}"),
+                        value: todos[index].completed, 
+                        onChanged: (_) => {
+                          ref.read(todoProvider).toggleTodo(todos[index].id)
+                        }
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        ref.read(todoProvider).removeTodo(todos[index].id);
+                      }, 
+                      icon: const Icon(
+                        Icons.remove_circle,
+                        color: Colors.red,
+                      )
+                    )
+                  ],
+                );
+              },
             ),
-            const SizedBox(
-              height: 16,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    ref.read(counterProvider.notifier).state += 1;
-                  }, 
-                  child: const Icon(Icons.arrow_upward)
-                ),
-                const SizedBox(
-                  width: 16,
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    ref.read(counterProvider.notifier).state -= 1;
-                  }, 
-                  child: const Icon(Icons.arrow_downward)
-                )
-              ],
-            )
-          ],
-        ),
-      ),
+          )
+        ],
+      )
     );
   }
 }

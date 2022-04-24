@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /*
-  - This is pretty much the most basic kind of Provider
-  - It can hold any type of data but it isn't very complex
-  - It can't change it from the outside, like somewhere in your Widget's build method
-  - We can use ref.watch to monitor other Providers and change its value from inside it though
+  - This is more step up from Provider, we can actually change its value from the outside
+  - Designed to avoid having to write a StateNotifier class for very simple use-cases.
+  - Use for simple data like String, number, boolean
 */ 
-final helloProvider = Provider((ref) => "Hello World");
+final counterProvider = StateProvider<int>((ref) => 0);
 
 void main() async {
   // For widgets to be able to read providers, we need to wrap the entire application in a "ProviderScope" widget.
@@ -31,17 +30,46 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    String hello = ref.watch(helloProvider);
+    int counter = ref.watch<int>(counterProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Riverpod's Provider"),
+        title: const Text("Riverpod's StateProvider"),
       ),
       body: Center(
-        child: Text(
-          hello,
-          style: const TextStyle(
-            fontSize: 18
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "$counter",
+              style: const TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w700
+              ),
+            ),
+            const SizedBox(
+              height: 16,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(counterProvider.notifier).state += 1;
+                  }, 
+                  child: const Icon(Icons.arrow_upward)
+                ),
+                const SizedBox(
+                  width: 16,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(counterProvider.notifier).state -= 1;
+                  }, 
+                  child: const Icon(Icons.arrow_downward)
+                )
+              ],
+            )
+          ],
         ),
       ),
     );

@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:hello_flutter/camera_utils.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() async {
   try {
@@ -37,11 +37,8 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   bool isCameraInitialized = false;
   CameraController? cameraController;
-  XFile? imageResult;
+  File? imageResult;
   Future<Directory?>? appDocumentsDirectory;
-
-  final GlobalKey containerCameraKey = GlobalKey();
-  Size containerCameraSize = const Size(1.0, 1.0);
 
   @override
   void initState() {
@@ -66,27 +63,6 @@ class _MainPageState extends State<MainPage> {
         Expanded(
           child: Stack(
             children: [
-              // Expanded(
-              //   key: containerCameraKey,
-              //   child: LayoutBuilder(
-              //     builder: (BuildContext context, BoxConstraints constraints) {
-              //       final aspectRatio = constraints.biggest.aspectRatio;
-              //       return Stack(
-              //         children: [
-              //           AspectRatio(
-              //             aspectRatio: aspectRatio,
-              //             child: CameraPreview(cameraController!),
-              //           ),
-              //           AspectRatio(
-              //             aspectRatio: aspectRatio,
-              //             child: onRenderResult(constraints.biggest.height),
-              //           ),
-              //         ],
-              //       );
-              //     }
-              //   )
-              // ),
-
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -155,9 +131,11 @@ class _MainPageState extends State<MainPage> {
     // Activate camera back
     CameraDescription camera = await CameraUtils.getCamera(CameraLensDirection.back);
     // Init camera controller
-    cameraController = CameraController(camera, ResolutionPreset.max, imageFormatGroup: ImageFormatGroup.jpeg);
-
-    appDocumentsDirectory = getApplicationDocumentsDirectory();
+    cameraController = CameraController(
+      camera, 
+      ResolutionPreset.max, 
+      imageFormatGroup: ImageFormatGroup.jpeg
+    );
 
     try {
       await cameraController?.initialize().whenComplete(() {
@@ -179,10 +157,16 @@ class _MainPageState extends State<MainPage> {
     log("onTakePicture: $isCameraInitialized");
 
     if (!isCameraInitialized) return;
-
-    imageResult = await cameraController?.takePicture();
     
-    setState(() {});
+    XFile? imageFile = await cameraController?.takePicture();
+
+    bool? isSuccess = await GallerySaver.saveImage(imageFile!.path, albumName: "Hello Flutter");
+
+    log("Result: ${(isSuccess ?? false)}");
+    
+    setState(() {
+      imageResult = File(imageFile.path);
+    });
   }
 
   Widget onRenderResult(double height, double width) {
@@ -191,12 +175,12 @@ class _MainPageState extends State<MainPage> {
     if ((imageResult == null) || (imageResult?.path == "")) return Container();
 
     return Container(
-        color: Colors.red,
+        color: Colors.green,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Image.file(
-              File(imageResult?.path ?? ""),
+              imageResult!,
               height: height,
               width: width,
               fit: BoxFit.fill,

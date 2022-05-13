@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:gallery_saver/gallery_saver.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:hello_flutter/camera_utils.dart';
 
 void main() async {
@@ -38,17 +38,19 @@ class _MainPageState extends State<MainPage> {
   bool isCameraInitialized = false;
   CameraController? cameraController;
   File? imageResult;
-  Future<Directory?>? appDocumentsDirectory;
+  late BarcodeScanner barcodeScanner;
 
   @override
   void initState() {
     initCamera();
+    initBarcodeScanner();
     super.initState();
   }
 
   @override
   void dispose() {
     cameraController?.dispose();
+    barcodeScanner.close();
     super.dispose();
   }
 
@@ -126,6 +128,15 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  void initBarcodeScanner() {
+    final List<BarcodeFormat> formats = [
+      BarcodeFormat.all,
+      BarcodeFormat.qrCode
+    ];
+
+    barcodeScanner = BarcodeScanner(formats: formats);
+  }
+
   initCamera() async {
     cameraController?.dispose();
     // Activate camera back
@@ -135,7 +146,7 @@ class _MainPageState extends State<MainPage> {
       camera, 
       ResolutionPreset.max, 
       imageFormatGroup: ImageFormatGroup.jpeg
-    );
+    );  
 
     try {
       await cameraController?.initialize().whenComplete(() {
@@ -160,9 +171,10 @@ class _MainPageState extends State<MainPage> {
     
     XFile? imageFile = await cameraController?.takePicture();
 
-    bool? isSuccess = await GallerySaver.saveImage(imageFile!.path, albumName: "Hello Flutter");
-
-    log("Result: ${(isSuccess ?? false)}");
+    await CameraUtils.detectBarcode(
+      File(imageFile!.path),
+      barcodeScanner
+    );
     
     setState(() {
       imageResult = File(imageFile.path);

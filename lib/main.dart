@@ -36,14 +36,15 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   bool isCameraInitialized = false;
+  bool isBarcodeDetected = false;
   CameraController? cameraController;
   File? imageResult;
   late BarcodeScanner barcodeScanner;
 
   @override
   void initState() {
-    initCamera();
     initBarcodeScanner();
+    initCamera();
     super.initState();
   }
 
@@ -134,7 +135,8 @@ class _MainPageState extends State<MainPage> {
       BarcodeFormat.qrCode
     ];
 
-    barcodeScanner = BarcodeScanner(formats: formats);
+    // barcodeScanner = BarcodeScanner(formats: formats);
+    barcodeScanner = GoogleMlKit.vision.barcodeScanner();
   }
 
   initCamera() async {
@@ -144,8 +146,8 @@ class _MainPageState extends State<MainPage> {
     // Init camera controller
     cameraController = CameraController(
       camera, 
-      ResolutionPreset.max, 
-      imageFormatGroup: ImageFormatGroup.jpeg
+      ResolutionPreset.high,
+      enableAudio: false
     );  
 
     try {
@@ -153,6 +155,40 @@ class _MainPageState extends State<MainPage> {
         setState(() {
           isCameraInitialized = true;
         });
+      });
+
+      await cameraController?.startImageStream((image) async {
+        
+        if (isBarcodeDetected || (cameraController == null)) {
+          return;
+        }
+
+        isBarcodeDetected = true;
+
+        final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(cameraController!.description.sensorOrientation) ?? InputImageRotation.rotation0deg;
+
+        List<Barcode> barcodes = await CameraUtils.detectBarcode(
+          image: image,
+          imageRotation: imageRotation,
+          barcodeScanner: barcodeScanner
+        );
+
+        if (barcodes.isEmpty) {
+          isBarcodeDetected = false;
+          return;
+        }
+
+        for (Barcode barcode in barcodes) {
+          final BarcodeType type = barcode.type;
+          final String? displayValue = barcode.displayValue;
+          final String? rawValue = barcode.rawValue;
+
+          print("Type: $type");
+          print("Raw Value: $rawValue");
+          print("Display Value: $displayValue");
+        }
+
+        isBarcodeDetected = false;
       });
 
       setState(() {
@@ -170,14 +206,9 @@ class _MainPageState extends State<MainPage> {
     if (!isCameraInitialized) return;
     
     XFile? imageFile = await cameraController?.takePicture();
-
-    await CameraUtils.detectBarcode(
-      File(imageFile!.path),
-      barcodeScanner
-    );
     
     setState(() {
-      imageResult = File(imageFile.path);
+      imageResult = File(imageFile!.path);
     });
   }
 

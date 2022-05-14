@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -87,12 +88,14 @@ class _MainPageState extends State<MainPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: ClipPath(
-                      child: Container(
-                        color: Colors.black38 ,
+                    child: Container(
+                    decoration: ShapeDecoration(
+                      shape: _ScannerOverlayShape(
+                        borderColor: Theme.of(context).primaryColor,
+                        borderWidth: 3.0,
                       ),
-                      clipper: CustomCircular(),
-                    )
+                    ),
+                  )
                   )
                 ],
               ),
@@ -253,23 +256,181 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-class CustomCircular extends CustomClipper<Path> {
+class _ScannerOverlayShape extends ShapeBorder {
+  final Color borderColor;
+  final double borderWidth;
+  final Color overlayColor;
+
+  const _ScannerOverlayShape({
+    this.borderColor = Colors.white,
+    this.borderWidth = 1.0,
+    this.overlayColor = const Color(0x88000000),
+  });
+
   @override
-  Path getClip(Size size) {
+  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(0.0);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
     return Path()
-      ..addRect(Rect.fromLTWH(0.0, 0.0, size.width, size.height))
-      ..addRRect(RRect.fromRectAndRadius(
-          Rect.fromCenter(
-              center: Offset(size.width * 0.5, size.height * 0.5),
-              width: size.width * 0.8,
-              height: size.width * 0.8
-            ),
-            const Radius.circular(15)
-          )
-        )
-      ..fillType = PathFillType.evenOdd;
+      ..fillType = PathFillType.evenOdd
+      ..addPath(getOuterPath(rect), Offset.zero);
   }
 
   @override
-  bool shouldReclip(CustomCircular oldClipper) => false;
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    print("Hello: ${rect.toString()}");
+
+    Path _getLeftTopPath(Rect rect) {
+      return Path()
+        ..moveTo(rect.left, rect.bottom)
+        ..lineTo(rect.left, rect.top)
+        ..lineTo(rect.right, rect.top);
+    }
+
+    return _getLeftTopPath(rect)
+      ..lineTo(
+        rect.right,
+        rect.bottom,
+      )
+      ..lineTo(
+        rect.left,
+        rect.bottom,
+      )
+      ..lineTo(
+        rect.left,
+        rect.top,
+      );
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    const lineSize = 30;
+
+    final width = rect.width;
+    final borderWidthSize = width * 10 / 100;
+    final height = rect.height;
+    final borderHeightSize = height - (width - borderWidthSize);
+    final borderSize = Size(borderWidthSize / 2, borderHeightSize / 2);
+
+    var paint = Paint()
+      ..color = overlayColor
+      ..style = PaintingStyle.fill;
+
+    canvas
+      ..drawRect(
+        Rect.fromLTRB(
+            rect.left, rect.top, rect.right, borderSize.height + rect.top),
+        paint,
+      )
+      ..drawRect(
+        Rect.fromLTRB(rect.left, rect.bottom - borderSize.height, rect.right,
+            rect.bottom),
+        paint,
+      )
+      ..drawRect(
+        Rect.fromLTRB(rect.left, rect.top + borderSize.height,
+            rect.left + borderSize.width, rect.bottom - borderSize.height),
+        paint,
+      )
+      ..drawRect(
+        Rect.fromLTRB(
+            rect.right - borderSize.width,
+            rect.top + borderSize.height,
+            rect.right,
+            rect.bottom - borderSize.height),
+        paint,
+      );
+
+    // Borders
+    paint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth;
+
+    final borderOffset = borderWidth / 2;
+    final realReact = Rect.fromLTRB(
+        borderSize.width + borderOffset,
+        borderSize.height + borderOffset + rect.top,
+        width - borderSize.width - borderOffset,
+        height - borderSize.height - borderOffset + rect.top);
+
+    //Draw top right corner
+    canvas
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.right, realReact.top)
+            ..lineTo(realReact.right, realReact.top + lineSize),
+          paint)
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.right, realReact.top)
+            ..lineTo(realReact.right - lineSize, realReact.top),
+          paint)
+      ..drawPoints(
+        PointMode.points,
+        [Offset(realReact.right, realReact.top)],
+        paint,
+      )
+
+      //Draw top left corner
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.left, realReact.top)
+            ..lineTo(realReact.left, realReact.top + lineSize),
+          paint)
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.left, realReact.top)
+            ..lineTo(realReact.left + lineSize, realReact.top),
+          paint)
+      ..drawPoints(
+        PointMode.points,
+        [Offset(realReact.left, realReact.top)],
+        paint,
+      )
+
+      //Draw bottom right corner
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.right, realReact.bottom)
+            ..lineTo(realReact.right, realReact.bottom - lineSize),
+          paint)
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.right, realReact.bottom)
+            ..lineTo(realReact.right - lineSize, realReact.bottom),
+          paint)
+      ..drawPoints(
+        PointMode.points,
+        [Offset(realReact.right, realReact.bottom)],
+        paint,
+      )
+
+      //Draw bottom left corner
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.left, realReact.bottom)
+            ..lineTo(realReact.left, realReact.bottom - lineSize),
+          paint)
+      ..drawPath(
+          Path()
+            ..moveTo(realReact.left, realReact.bottom)
+            ..lineTo(realReact.left + lineSize, realReact.bottom),
+          paint)
+      ..drawPoints(
+        PointMode.points,
+        [Offset(realReact.left, realReact.bottom)],
+        paint,
+      );
+  }
+
+  @override
+  ShapeBorder scale(double t) {
+    return _ScannerOverlayShape(
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      overlayColor: overlayColor,
+    );
+  }
 }

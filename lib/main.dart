@@ -43,6 +43,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   File? imageResult;
   late BarcodeScanner barcodeScanner;
   List<Barcode> barcodes = [];
+  List<Color> scannerGradientColors = [];
   late AnimationController animationController;
   late Animation animation;
   
@@ -64,13 +65,15 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     })
     ..addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        scannerGradientColors = [Colors.green, Colors.transparent];
         animationController.reverse();
       } else if (status == AnimationStatus.dismissed) {
+        scannerGradientColors = [Colors.transparent, Colors.green];
         animationController.forward();
       }
     });
     
-
+    scannerGradientColors = [Colors.transparent, Colors.green];
     animationController.forward();
     
     initBarcodeScanner();
@@ -124,7 +127,8 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
                         return CustomPaint(
                           painter: FramePainter(
                             barcodes: barcodes,
-                            scannerLine: animation.value
+                            scannerLine: animation.value,
+                            scannerGradientColors: scannerGradientColors
                           ),
                           child: Container(),
                         );
@@ -144,7 +148,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     barcodeScanner = GoogleMlKit.vision.barcodeScanner();
   }
 
-  initCamera() async {
+  void initCamera() async {
     cameraController?.dispose();
     // Activate camera back
     CameraDescription camera = await CameraUtils.getCamera(CameraLensDirection.back);

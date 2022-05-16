@@ -1,14 +1,18 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class FramePainter extends CustomPainter {
 
   final List<Barcode> barcodes;
+  final List<Color> scannerGradientColors;
   final double scannerLine;
   
   FramePainter({
     required this.barcodes, 
-    required this.scannerLine
+    required this.scannerLine,
+    required this.scannerGradientColors
   });
 
   @override
@@ -88,13 +92,18 @@ class FramePainter extends CustomPainter {
     // Draw masked frame overlay to the screen
     canvas.drawPath(path, paint);
 
+    final Rect scannerRect = Rect.fromLTWH(0, scannerLine, size.width, 50);
     var linePaint = Paint()
-      ..color = Colors.green.withOpacity(0.5)
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: scannerGradientColors
+      ).createShader(scannerRect)
       ..style = PaintingStyle.fill;
 
     final Path scannerPath = Path.combine(
       PathOperation.intersect,
-      Path()..addRect(Rect.fromLTWH(0, scannerLine, size.width, 5))..close(), 
+      Path()..addRect(scannerRect)..close(), 
       Path()..addRRect(
         RRect.fromRectAndRadius(
           holeRect,
@@ -121,6 +130,6 @@ class FramePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.barcodes != barcodes;
+  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.barcodes != barcodes || oldDelegate.scannerGradientColors != scannerGradientColors;
   
 }

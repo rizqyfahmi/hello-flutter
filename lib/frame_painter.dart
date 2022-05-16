@@ -31,15 +31,7 @@ class FramePainter extends CustomPainter {
       
       final Rect barcodeRect = _scaleRect(barcode, size);
 
-      // Prevent a barcode that the part of QR code still inside the frame
-      if (
-        barcodeRect.left < holeRect.left ||
-        barcodeRect.top < holeRect.top ||
-        barcodeRect.right > holeRect.right ||
-        barcodeRect.bottom > holeRect.bottom
-      ) {
-        continue;
-      }
+      detectorPaint.color = Colors.green;
 
       // Prevent a barcode that the QR code is out of range of the frame
       if (
@@ -48,6 +40,20 @@ class FramePainter extends CustomPainter {
         barcodeRect.right < holeRect.left ||
         barcodeRect.bottom < holeRect.top
       ) {
+        detectorPaint.color = Colors.red;
+        canvas.drawRect(barcodeRect, detectorPaint);
+        continue;
+      }
+
+      // Prevent a barcode that the part of QR code still inside the frame
+      if (
+        barcodeRect.left < holeRect.left ||
+        barcodeRect.top < holeRect.top ||
+        barcodeRect.right > holeRect.right ||
+        barcodeRect.bottom > holeRect.bottom
+      ) {
+        detectorPaint.color = Colors.yellow;
+        canvas.drawRect(barcodeRect, detectorPaint);
         continue;
       }
 

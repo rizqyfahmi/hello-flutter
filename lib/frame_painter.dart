@@ -4,9 +4,11 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 class FramePainter extends CustomPainter {
 
   final List<Barcode> barcodes;
+  final double scannerLine;
   
   FramePainter({
     required this.barcodes, 
+    required this.scannerLine
   });
 
   @override
@@ -85,6 +87,24 @@ class FramePainter extends CustomPainter {
 
     // Draw masked frame overlay to the screen
     canvas.drawPath(path, paint);
+
+    var linePaint = Paint()
+      ..color = Colors.green.withOpacity(0.5)
+      ..style = PaintingStyle.fill;
+
+    final Path scannerPath = Path.combine(
+      PathOperation.intersect,
+      Path()..addRect(Rect.fromLTWH(0, scannerLine, size.width, 5))..close(), 
+      Path()..addRRect(
+        RRect.fromRectAndRadius(
+          holeRect,
+          const Radius.circular(16)
+        )
+      )..close()
+    );
+
+    // Draw masked frame overlay to the screen
+    canvas.drawPath(scannerPath, linePaint);
   } 
 
   Rect _scaleRect(Barcode barcode, Size size) {

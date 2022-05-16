@@ -36,16 +36,43 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin {
   bool isCameraInitialized = false;
   bool isBarcodeDetected = false;
   CameraController? cameraController;
   File? imageResult;
   late BarcodeScanner barcodeScanner;
   List<Barcode> barcodes = [];
-
+  late AnimationController animationController;
+  late Animation animation;
+  
   @override
   void initState() {
+    final logicalPixel = window.physicalSize / window.devicePixelRatio;
+    final logicalWidth = logicalPixel.width;
+    final logicalHeight = logicalPixel.height;
+
+    final frameSize = logicalWidth * 0.8;
+    final frameStart = (logicalHeight / 2) - (frameSize / 2);
+    final frameEnd = frameStart + frameSize;
+
+    animationController = AnimationController(duration: const Duration(seconds: 1), vsync: this);
+    
+    animation = Tween<double>(begin: frameStart, end: frameEnd).animate(animationController)
+    ..addListener(() {
+      setState(() {});
+    })
+    ..addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        animationController.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        animationController.forward();
+      }
+    });
+    
+
+    animationController.forward();
+    
     initBarcodeScanner();
     initCamera();
     super.initState();
@@ -54,6 +81,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void dispose() {
     cameraController?.dispose();
+    animationController.dispose();
     barcodeScanner.close();
     super.dispose();
   }
@@ -90,11 +118,17 @@ class _MainPageState extends State<MainPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: CustomPaint(
-                      painter: FramePainter(
-                        barcodes: barcodes
-                      ),
-                      child: Container(),
+                    child: AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, snapshot) {
+                        return CustomPaint(
+                          painter: FramePainter(
+                            barcodes: barcodes,
+                            scannerLine: animation.value
+                          ),
+                          child: Container(),
+                        );
+                      }
                     )
                   )
                 ],

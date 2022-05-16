@@ -23,36 +23,46 @@ class FramePainter extends CustomPainter {
     final Paint detectorPaint = Paint();
     detectorPaint.style = PaintingStyle.fill;
     detectorPaint.strokeWidth = 2;
-    
-    // Create barcode
-    for (Barcode barcode in barcodes) {
-      // Change color for barcode rectangle
-      detectorPaint.color = Colors.green;
 
+    final List<Rect> filteredBarcodeRect = [];
+    
+    // Filter barcode
+    for (Barcode barcode in barcodes) {
+      
       final Rect barcodeRect = _scaleRect(barcode, size);
 
-      // Change color of barcode rectangle to be yellow when the part of QR code still inside the frame
+      // Prevent a barcode that the part of QR code still inside the frame
       if (
         barcodeRect.left < holeRect.left ||
         barcodeRect.top < holeRect.top ||
         barcodeRect.right > holeRect.right ||
         barcodeRect.bottom > holeRect.bottom
       ) {
-        detectorPaint.color = Colors.yellow;
+        continue;
       }
 
-      // Change color of barcode rectangle to be red when the QR code is out of range of the frame
+      // Prevent a barcode that the QR code is out of range of the frame
       if (
         barcodeRect.left > holeRect.right ||
         barcodeRect.top > holeRect.bottom ||  
         barcodeRect.right < holeRect.left ||
         barcodeRect.bottom < holeRect.top
       ) {
+        continue;
+      }
+
+      filteredBarcodeRect.add(barcodeRect);
+    }
+
+    for (Rect rect in filteredBarcodeRect) {
+      detectorPaint.color = Colors.green;
+
+      if (filteredBarcodeRect.length > 1) {
         detectorPaint.color = Colors.red;
       }
 
       // Draw barcode rectangle to the screen
-      canvas.drawRect(barcodeRect, detectorPaint);
+      canvas.drawRect(rect, detectorPaint);
     }
 
     // Create masked frame overlay

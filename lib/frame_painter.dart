@@ -8,11 +8,13 @@ class FramePainter extends CustomPainter {
   final List<Barcode> barcodes;
   final List<Color> scannerGradientColors;
   final double scannerLine;
+  final ValueSetter<Barcode> onBarcodeScanned;
   
   FramePainter({
     required this.barcodes, 
     required this.scannerLine,
-    required this.scannerGradientColors
+    required this.scannerGradientColors,
+    required this.onBarcodeScanned
   });
 
   @override
@@ -30,7 +32,7 @@ class FramePainter extends CustomPainter {
     detectorPaint.style = PaintingStyle.fill;
     detectorPaint.strokeWidth = 2;
 
-    final List<Rect> filteredBarcodeRect = [];
+    final List<BarcodeAndRect> filteredBarcodeRect = [];
     
     // Filter barcode
     for (Barcode barcode in barcodes) {
@@ -63,18 +65,21 @@ class FramePainter extends CustomPainter {
         continue;
       }
 
-      filteredBarcodeRect.add(barcodeRect);
+      filteredBarcodeRect.add(BarcodeAndRect(barcode: barcode, rect: barcodeRect));
     }
 
-    for (Rect rect in filteredBarcodeRect) {
-      detectorPaint.color = Colors.green;
+    for (BarcodeAndRect item in filteredBarcodeRect) {
 
-      if (filteredBarcodeRect.length > 1) {
-        detectorPaint.color = Colors.red;
+      if (filteredBarcodeRect.length == 1) {
+        detectorPaint.color = Colors.green;
+        onBarcodeScanned(item.barcode);
+        canvas.drawRect(item.rect, detectorPaint);
+        break;
       }
 
+      detectorPaint.color = Colors.purple;
       // Draw barcode rectangle to the screen
-      canvas.drawRect(rect, detectorPaint);
+      canvas.drawRect(item.rect, detectorPaint);
     }
 
     // Create masked frame overlay
@@ -132,4 +137,14 @@ class FramePainter extends CustomPainter {
   @override
   bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.barcodes != barcodes || oldDelegate.scannerGradientColors != scannerGradientColors;
   
+}
+
+class BarcodeAndRect {
+  late final Barcode barcode;
+  late final Rect rect;
+
+  BarcodeAndRect({
+    required this.barcode,
+    required this.rect
+  });
 }

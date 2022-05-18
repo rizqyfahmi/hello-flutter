@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: MainPage(),
     );
   }
@@ -39,6 +40,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin {
   bool isCameraInitialized = false;
   bool isBarcodeDetected = false;
+  bool isDetectedBarcodeCaptured = false;
   CameraController? cameraController;
   File? imageResult;
   late BarcodeScanner barcodeScanner;
@@ -59,22 +61,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
     animationController = AnimationController(duration: const Duration(seconds: 1), vsync: this);
     
-    animation = Tween<double>(begin: frameStart, end: frameEnd).animate(animationController)
+    animation = Tween<double>(begin: frameStart, end: frameEnd).animate(animationController)  
     ..addListener(() {
       setState(() {});
-    })
-    ..addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        scannerGradientColors = [Colors.green, Colors.transparent];
-        animationController.reverse();
-      } else if (status == AnimationStatus.dismissed) {
-        scannerGradientColors = [Colors.transparent, Colors.green];
-        animationController.forward();
-      }
     });
-    
-    scannerGradientColors = [Colors.transparent, Colors.green];
-    animationController.forward();
     
     initBarcodeScanner();
     initCamera();
@@ -117,6 +107,20 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
                 ],
               ),
               Column(
+                children: [
+                  Expanded(
+                    child: LayoutBuilder(builder: (context, constraints) {
+                      log("Constraints: ${constraints.biggest}");
+                      return AspectRatio(
+                        aspectRatio: constraints.biggest.aspectRatio,
+                        child: onRenderResult(constraints.biggest.height,
+                            constraints.biggest.width),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+              Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -126,15 +130,44 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
                       builder: (context, snapshot) {
                         return CustomPaint(
                           painter: FramePainter(
-                            barcodes: barcodes,
+                            barcodes: !isDetectedBarcodeCaptured ? barcodes : [],
                             scannerLine: animation.value,
-                            scannerGradientColors: scannerGradientColors
+                            scannerGradientColors: scannerGradientColors,
+                            onBarcodeScanned: onBarcodeScanned
                           ),
                           child: Container(),
                         );
                       }
                     )
                   )
+                ],
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    color: Colors.transparent,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: onRenderControlIcon(),
+                            onPressed: () {
+                              if ((imageResult == null) ||
+                                  (imageResult?.path == "")) {
+                                return onTakePicture();
+                              }
+
+                              setState(() {
+                                isCameraInitialized = false;
+                                isDetectedBarcodeCaptured = false;
+                                imageResult = null;
+                                initCamera();
+                              });
+                            },
+                          ),
+                        ]),
+                  ),
                 ],
               ),
             ],
@@ -157,7 +190,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       camera, 
       ResolutionPreset.high,
       enableAudio: false
-    );  
+    );
+
+    scannerGradientColors = [Colors.transparent, Colors.transparent];
+    animationController.reset();
 
     try {
       await cameraController?.initialize().whenComplete(() {
@@ -166,43 +202,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
         });
       });
 
-      await cameraController?.startImageStream((image) async {
-        
-        if (isBarcodeDetected || (cameraController == null)) {
-          return;
-        }
-
-        isBarcodeDetected = true;
-
-        final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(cameraController!.description.sensorOrientation) ?? InputImageRotation.rotation0deg;
-
-        List<Barcode> tempBarcodes = await CameraUtils.detectBarcode(
-          image: image,
-          imageRotation: imageRotation,
-          barcodeScanner: barcodeScanner
-        );
-
-        setState(() {
-          barcodes = tempBarcodes;
-        });
-
-        if (tempBarcodes.isEmpty) {
-          isBarcodeDetected = false;
-          return;
-        }
-
-        for (Barcode barcode in barcodes) {
-          final BarcodeType type = barcode.type;
-          final String? displayValue = barcode.displayValue;
-          final String? rawValue = barcode.rawValue;
-
-          print("Type: $type");
-          print("Raw Value: $rawValue");
-          print("Display Value: $displayValue");
-        }
-
-        isBarcodeDetected = false;
-      });
+      startImageStream();
 
       setState(() {
         imageResult = null;
@@ -211,6 +211,98 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     } catch (e) {
       log("Init cameraController: ${e.toString()}");
     }
+  }
+
+  void startImageStream() async {
+    if (cameraController == null) return;
+
+    await cameraController?.startImageStream((image) async {
+        
+     if (isBarcodeDetected || (cameraController == null)) {
+        return;
+      }
+
+      isBarcodeDetected = true;
+
+      final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(cameraController!.description.sensorOrientation) ?? InputImageRotation.rotation0deg;
+
+      List<Barcode> tempBarcodes = await CameraUtils.detectBarcode(
+        image: image,
+        imageRotation: imageRotation,
+        barcodeScanner: barcodeScanner
+      );
+
+      setState(() {
+        barcodes = tempBarcodes;
+      });
+
+      isBarcodeDetected = false;
+
+    });
+  }
+
+  void onBarcodeScanned(Barcode barcode) async {
+    if (isDetectedBarcodeCaptured) return;
+    
+    print("Hello Scanned: ${barcode.rawValue}");
+    
+    isDetectedBarcodeCaptured = true;
+
+    onTakePicture();
+    
+  }
+
+  void onTakePicture() async {
+    log("onTakePicture: $isCameraInitialized");
+
+    if (!isCameraInitialized) return;
+
+    if (cameraController?.value.isStreamingImages ?? false) {
+      await cameraController?.stopImageStream();
+    }
+
+    XFile? xImage = await cameraController?.takePicture();
+
+    if (!(cameraController?.value.isPreviewPaused ?? false)) {
+      await cameraController?.pausePreview();
+    }
+
+    setState(() {
+      imageResult = File(xImage!.path);
+       barcodes = [];
+    });
+
+    scannerGradientColors = [Colors.transparent, Colors.green];
+    animationController.forward();
+  }
+
+  Widget onRenderResult(double height, double width) {
+    log("onRenderResult: $imageResult");
+
+    if ((imageResult == null) || (imageResult?.path == "")) return Container();
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Image.file(
+          File(imageResult?.path ?? ""),
+          height: height,
+          width: width,
+          fit: BoxFit.fill,
+        )
+      ],
+    );
+  }
+
+  Widget onRenderControlIcon() {
+    if ((imageResult == null) || (imageResult?.path == "")) {
+      return const Icon(
+        Icons.camera,
+        color: Colors.white,
+      );
+    }
+
+    return const Icon(Icons.restart_alt_rounded, color: Colors.white);
   }
 
 }

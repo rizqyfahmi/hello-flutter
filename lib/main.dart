@@ -37,17 +37,21 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin {
+class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
   bool isCameraInitialized = false;
   bool isBarcodeDetected = false;
   bool isDetectedBarcodeCaptured = false;
   CameraController? cameraController;
+  BarcodeScanner? barcodeScanner;
   File? imageResult;
-  late BarcodeScanner barcodeScanner;
   List<Barcode> barcodes = [];
   List<Color> scannerGradientColors = [];
+
+  Barcode? barcode;
   late AnimationController animationController;
   late Animation animation;
+  late AnimationController bottomSheetAnimationController;
+  late Animation bottomSheetAnimation;
   
   @override
   void initState() {
@@ -59,11 +63,31 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     final frameStart = (logicalHeight / 2) - (frameSize / 2);
     final frameEnd = frameStart + frameSize;
 
+    bottomSheetAnimationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
+    bottomSheetAnimation = Tween<double>(begin: 1, end: 0).animate(bottomSheetAnimationController)
+    ..addStatusListener((status) {
+      if (status == AnimationStatus.dismissed) {
+        setState(() {
+          isCameraInitialized = false;
+          isDetectedBarcodeCaptured = false;
+          imageResult = null;
+          barcode = null;
+          barcodes = [];
+          initBarcodeScanner();
+          initCamera();
+        });
+      }
+    });
+
     animationController = AnimationController(duration: const Duration(seconds: 1), vsync: this);
-    
     animation = Tween<double>(begin: frameStart, end: frameEnd).animate(animationController)  
     ..addListener(() {
       setState(() {});
+    })
+    ..addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        bottomSheetAnimationController.forward();
+      }
     });
     
     initBarcodeScanner();
@@ -74,15 +98,14 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   @override
   void dispose() {
     cameraController?.dispose();
+    barcodeScanner?.close();
     animationController.dispose();
-    barcodeScanner.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (!isCameraInitialized) return const Center(child: CircularProgressIndicator());
-
 
     log("AspectRatio: ${MediaQuery.of(context).size} ${MediaQuery.of(context).size.width}");
     return Scaffold(
@@ -127,10 +150,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
                   Expanded(
                     child: AnimatedBuilder(
                       animation: animation,
-                      builder: (context, snapshot) {
+                      builder: (context, child) {
                         return CustomPaint(
                           painter: FramePainter(
-                            barcodes: !isDetectedBarcodeCaptured ? barcodes : [],
+                            barcodes: barcodes,
                             scannerLine: animation.value,
                             scannerGradientColors: scannerGradientColors,
                             onBarcodeScanned: onBarcodeScanned
@@ -142,34 +165,70 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
                   )
                 ],
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    color: Colors.transparent,
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              AnimatedBuilder(
+                animation: bottomSheetAnimation,
+                builder: (context, child) => Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: FractionalTranslation(
+                    translation: Offset(0, bottomSheetAnimation.value),
+                    child: Container(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          IconButton(
-                            icon: onRenderControlIcon(),
-                            onPressed: () {
-                              if ((imageResult == null) ||
-                                  (imageResult?.path == "")) {
-                                return onTakePicture();
-                              }
-
-                              setState(() {
-                                isCameraInitialized = false;
-                                isDetectedBarcodeCaptured = false;
-                                imageResult = null;
-                                initCamera();
-                              });
-                            },
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(50)
+                              ),
+                              child: TextButton(
+                                onPressed: () {
+                                  bottomSheetAnimationController.reverse();
+                                }, 
+                                child: const Center(
+                                  child: Text(
+                                    "Submit",
+                                    style: TextStyle(
+                                      color: Colors.white
+                                    ),
+                                  ),
+                                )
+                              ),
+                            )
                           ),
-                        ]),
-                  ),
-                ],
-              ),
+                          Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                bottomSheetAnimationController.reverse();
+                              }, 
+                              icon: const Icon(
+                                Icons.close_rounded, 
+                                color: Colors.white
+                              )
+                            ),
+                          )
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8)
+                        )
+                      ),
+                    ),
+                  )
+                ),
+              )
             ],
           ),
         ),
@@ -229,11 +288,11 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       List<Barcode> tempBarcodes = await CameraUtils.detectBarcode(
         image: image,
         imageRotation: imageRotation,
-        barcodeScanner: barcodeScanner
+        barcodeScanner: barcodeScanner!
       );
 
       setState(() {
-        barcodes = tempBarcodes;
+        barcodes = !isDetectedBarcodeCaptured ? tempBarcodes : [];
       });
 
       isBarcodeDetected = false;
@@ -244,7 +303,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   void onBarcodeScanned(Barcode barcode) async {
     if (isDetectedBarcodeCaptured) return;
     
-    print("Hello Scanned: ${barcode.rawValue}");
+    this.barcode = barcode;
     
     isDetectedBarcodeCaptured = true;
 
@@ -257,20 +316,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
     if (!isCameraInitialized) return;
 
-    if (cameraController?.value.isStreamingImages ?? false) {
-      await cameraController?.stopImageStream();
-    }
-
-    XFile? xImage = await cameraController?.takePicture();
-
-    if (!(cameraController?.value.isPreviewPaused ?? false)) {
-      await cameraController?.pausePreview();
-    }
-
-    setState(() {
-      imageResult = File(xImage!.path);
-       barcodes = [];
-    });
+    await cameraController?.pausePreview();
 
     scannerGradientColors = [Colors.transparent, Colors.green];
     animationController.forward();

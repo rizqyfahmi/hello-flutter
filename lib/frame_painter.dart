@@ -29,8 +29,8 @@ class FramePainter extends CustomPainter {
     );
 
     final Paint detectorPaint = Paint();
-    detectorPaint.style = PaintingStyle.fill;
-    detectorPaint.strokeWidth = 2;
+    detectorPaint.style = PaintingStyle.stroke;
+    detectorPaint.strokeWidth = 5;
 
     final List<BarcodeAndRect> filteredBarcodeRect = [];
     
@@ -60,7 +60,7 @@ class FramePainter extends CustomPainter {
         barcodeRect.right > holeRect.right ||
         barcodeRect.bottom > holeRect.bottom
       ) {
-        detectorPaint.color = Colors.yellow;
+        detectorPaint.color = Colors.orange;
         canvas.drawRect(barcodeRect, detectorPaint);
         continue;
       }
@@ -77,7 +77,7 @@ class FramePainter extends CustomPainter {
         break;
       }
 
-      detectorPaint.color = Colors.purple;
+      detectorPaint.color = Colors.yellow;
       // Draw barcode rectangle to the screen
       canvas.drawRect(item.rect, detectorPaint);
     }

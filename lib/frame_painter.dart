@@ -5,13 +5,13 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 
 class FramePainter extends CustomPainter {
 
-  final List<Barcode> barcodes;
+  final List<TextBlock> textBlocks;
   final List<Color> scannerGradientColors;
   final double scannerLine;
-  final ValueSetter<Barcode> onBarcodeScanned;
+  final ValueSetter<TextBlock> onBarcodeScanned;
   
   FramePainter({
-    required this.barcodes, 
+    required this.textBlocks, 
     required this.scannerLine,
     required this.scannerGradientColors,
     required this.onBarcodeScanned
@@ -25,62 +25,51 @@ class FramePainter extends CustomPainter {
     final holeRect = Rect.fromCenter(
       center: Offset(size.width * 0.5, size.height * 0.5), 
       width: size.width * 0.8, 
-      height: size.width * 0.8
+      height: (3/4) * (size.width * 0.8) //3:4 is the aspect ratio of ID Card
     );
 
     final Paint detectorPaint = Paint();
     detectorPaint.style = PaintingStyle.stroke;
     detectorPaint.strokeWidth = 5;
 
-    final List<BarcodeAndRect> filteredBarcodeRect = [];
-    
-    // Filter barcode
-    for (Barcode barcode in barcodes) {
-      
-      final Rect barcodeRect = _scaleRect(barcode, size);
+    final List<TextBlock> filteredTextBlocks = textBlocks.where((TextBlock textBlock) {
 
+      final Rect rect = _scaleRect(textBlock.boundingBox, size);
+
+      final bool isOutOfTheFrame = (
+        rect.left > holeRect.right ||
+        rect.top > holeRect.bottom ||  
+        rect.right < holeRect.left ||
+        rect.bottom < holeRect.top
+      );
+
+      final bool isNotPerfectlyInTheFrame = (
+        rect.left < holeRect.left ||
+        rect.top < holeRect.top ||
+        rect.right > holeRect.right ||
+        rect.bottom > holeRect.bottom
+      );
+
+      return (!isOutOfTheFrame) && (!isNotPerfectlyInTheFrame);
+    }).toList();
+
+    filteredTextBlocks.asMap().forEach((int index, TextBlock textBlock) {
+      print("Hello ${textBlock.text}");
+      
       detectorPaint.color = Colors.green;
 
-      // Prevent a barcode that the QR code is out of range of the frame
-      if (
-        barcodeRect.left > holeRect.right ||
-        barcodeRect.top > holeRect.bottom ||  
-        barcodeRect.right < holeRect.left ||
-        barcodeRect.bottom < holeRect.top
-      ) {
-        detectorPaint.color = Colors.red;
-        canvas.drawRect(barcodeRect, detectorPaint);
-        continue;
+      if (index % 2 == 0) {
+        detectorPaint.color = Colors.yellow;
       }
 
-      // Prevent a barcode that the part of QR code still inside the frame
-      if (
-        barcodeRect.left < holeRect.left ||
-        barcodeRect.top < holeRect.top ||
-        barcodeRect.right > holeRect.right ||
-        barcodeRect.bottom > holeRect.bottom
-      ) {
-        detectorPaint.color = Colors.orange;
-        canvas.drawRect(barcodeRect, detectorPaint);
-        continue;
-      }
+      textBlock.lines.forEach((TextLine textLine) {
+        textLine.elements.forEach((TextElement textElement) {
+          final Rect barcodeRect = _scaleRect(textElement.boundingBox, size);
 
-      filteredBarcodeRect.add(BarcodeAndRect(barcode: barcode, rect: barcodeRect));
-    }
-
-    for (BarcodeAndRect item in filteredBarcodeRect) {
-
-      if (filteredBarcodeRect.length == 1) {
-        detectorPaint.color = Colors.green;
-        onBarcodeScanned(item.barcode);
-        canvas.drawRect(item.rect, detectorPaint);
-        break;
-      }
-
-      detectorPaint.color = Colors.yellow;
-      // Draw barcode rectangle to the screen
-      canvas.drawRect(item.rect, detectorPaint);
-    }
+          canvas.drawRect(barcodeRect, detectorPaint);
+        });
+      });
+    });
 
     // Create masked frame overlay
     final Path path = Path.combine(
@@ -97,54 +86,32 @@ class FramePainter extends CustomPainter {
     // Draw masked frame overlay to the screen
     canvas.drawPath(path, paint);
 
-    final Rect scannerRect = Rect.fromLTWH(0, scannerLine, size.width, 50);
-    var linePaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: scannerGradientColors
-      ).createShader(scannerRect)
-      ..style = PaintingStyle.fill;
-
-    final Path scannerPath = Path.combine(
-      PathOperation.intersect,
-      Path()..addRect(scannerRect)..close(), 
-      Path()..addRRect(
-        RRect.fromRectAndRadius(
-          holeRect,
-          const Radius.circular(16)
-        )
-      )..close()
-    );
-
-    // Draw masked frame overlay to the screen
-    canvas.drawPath(scannerPath, linePaint);
   } 
 
-  Rect _scaleRect(Barcode barcode, Size size) {
+  Rect _scaleRect(Rect box, Size size) {
     final double scaleX = size.width / 720; // Based on the resolution that we set on camera initialization (ResolutionPreset.high).
     final double scaleY = size.height / 1280; // Based on the resolution that we set on camera initialization (ResolutionPreset.high).
 
     return Rect.fromLTRB(
-      (barcode.boundingBox?.left ?? 0) * scaleX,
-      (barcode.boundingBox?.top ?? 0) * scaleY,
-      (barcode.boundingBox?.right ?? 0) * scaleX,
-      (barcode.boundingBox?.bottom ?? 0) * scaleY
+      (box.left) * scaleX,
+      (box.top) * scaleY,
+      (box.right) * scaleX,
+      (box.bottom) * scaleY
     );
     
   }
 
   @override
-  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.barcodes != barcodes || oldDelegate.scannerGradientColors != scannerGradientColors;
+  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.textBlocks != textBlocks || oldDelegate.scannerGradientColors != scannerGradientColors;
   
 }
 
-class BarcodeAndRect {
-  late final Barcode barcode;
+class TextBlockAndRect {
+  late final TextBlock textBlock;
   late final Rect rect;
 
-  BarcodeAndRect({
-    required this.barcode,
+  TextBlockAndRect({
+    required this.textBlock,
     required this.rect
   });
 }

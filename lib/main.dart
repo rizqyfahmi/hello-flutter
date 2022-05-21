@@ -39,15 +39,15 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
   bool isCameraInitialized = false;
-  bool isBarcodeDetected = false;
+  bool isTextRecognized = false;
   bool isDetectedBarcodeCaptured = false;
   CameraController? cameraController;
-  BarcodeScanner? barcodeScanner;
+  TextRecognizer? textRecognizer;
   File? imageResult;
-  List<Barcode> barcodes = [];
+  List<TextBlock> textBlocks = [];
   List<Color> scannerGradientColors = [];
 
-  Barcode? barcode;
+  TextBlock? textBlock;
   late AnimationController animationController;
   late Animation animation;
   late AnimationController bottomSheetAnimationController;
@@ -71,9 +71,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
           isCameraInitialized = false;
           isDetectedBarcodeCaptured = false;
           imageResult = null;
-          barcode = null;
-          barcodes = [];
-          initBarcodeScanner();
+          textBlock = null;
+          textBlocks = [];
+          initTextRecognizer();
           initCamera();
         });
       }
@@ -90,7 +90,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
       }
     });
     
-    initBarcodeScanner();
+    initTextRecognizer();
     initCamera();
     super.initState();
   }
@@ -98,7 +98,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
   @override
   void dispose() {
     cameraController?.dispose();
-    barcodeScanner?.close();
+    textRecognizer?.close();
     animationController.dispose();
     super.dispose();
   }
@@ -136,8 +136,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
                       log("Constraints: ${constraints.biggest}");
                       return AspectRatio(
                         aspectRatio: constraints.biggest.aspectRatio,
-                        child: onRenderResult(constraints.biggest.height,
-                            constraints.biggest.width),
+                        child: onRenderResult(constraints.biggest.height, constraints.biggest.width),
                       );
                     }),
                   ),
@@ -153,7 +152,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
                       builder: (context, child) {
                         return CustomPaint(
                           painter: FramePainter(
-                            barcodes: barcodes,
+                            textBlocks: textBlocks,
                             scannerLine: animation.value,
                             scannerGradientColors: scannerGradientColors,
                             onBarcodeScanned: onBarcodeScanned
@@ -164,6 +163,33 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
                     )
                   )
                 ],
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    color: Colors.transparent,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: onRenderControlIcon(),
+                          onPressed: () {
+                            if ((imageResult == null) || (imageResult?.path == "")) {
+                              return onTakePicture();
+                            }
+
+                            setState(() {
+                              isCameraInitialized = false;
+                              imageResult = null;
+                              initCamera();
+                            });
+                          },
+                        ),
+                      ]
+                    ),
+                  ),
+                ]
               ),
               AnimatedBuilder(
                 animation: bottomSheetAnimation,
@@ -236,8 +262,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
     );
   }
 
-  void initBarcodeScanner() {
-    barcodeScanner = GoogleMlKit.vision.barcodeScanner();
+  void initTextRecognizer() {
+    textRecognizer = GoogleMlKit.vision.textRecognizer();
   }
 
   void initCamera() async {
@@ -261,8 +287,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
         });
       });
 
-      startImageStream();
-
       setState(() {
         imageResult = null;
         cameraController?.setFlashMode(FlashMode.off);
@@ -272,38 +296,10 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
     }
   }
 
-  void startImageStream() async {
-    if (cameraController == null) return;
-
-    await cameraController?.startImageStream((image) async {
-        
-     if (isBarcodeDetected || (cameraController == null)) {
-        return;
-      }
-
-      isBarcodeDetected = true;
-
-      final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(cameraController!.description.sensorOrientation) ?? InputImageRotation.rotation0deg;
-
-      List<Barcode> tempBarcodes = await CameraUtils.detectBarcode(
-        image: image,
-        imageRotation: imageRotation,
-        barcodeScanner: barcodeScanner!
-      );
-
-      setState(() {
-        barcodes = !isDetectedBarcodeCaptured ? tempBarcodes : [];
-      });
-
-      isBarcodeDetected = false;
-
-    });
-  }
-
-  void onBarcodeScanned(Barcode barcode) async {
+  void onBarcodeScanned(TextBlock textBlock) async {
     if (isDetectedBarcodeCaptured) return;
     
-    this.barcode = barcode;
+    this.textBlock = textBlock;
     
     isDetectedBarcodeCaptured = true;
 
@@ -316,7 +312,23 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
 
     if (!isCameraInitialized) return;
 
-    await cameraController?.pausePreview();
+    XFile? image = await cameraController?.takePicture();
+
+    imageResult = File(image!.path);
+    
+    final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(cameraController!.description.sensorOrientation) ?? InputImageRotation.rotation0deg;
+
+    RecognizedText recognizedText = await CameraUtils.detectText(
+      image: imageResult!,
+      imageRotation: imageRotation,
+      textRecognizer: textRecognizer!
+    );
+
+    print("Hello detector: ${recognizedText.blocks.length}");
+
+    setState(() {
+      textBlocks = recognizedText.blocks;
+    });
 
     scannerGradientColors = [Colors.transparent, Colors.green];
     animationController.forward();

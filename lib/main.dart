@@ -39,17 +39,12 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
   bool isCameraInitialized = false;
-  bool isTextRecognized = false;
-  bool isDetectedBarcodeCaptured = false;
   CameraController? cameraController;
   TextRecognizer? textRecognizer;
   File? imageResult;
   List<TextBlock> textBlocks = [];
-  List<Color> scannerGradientColors = [];
-
+  
   TextBlock? textBlock;
-  late AnimationController animationController;
-  late Animation animation;
   late AnimationController bottomSheetAnimationController;
   late Animation bottomSheetAnimation;
   
@@ -69,7 +64,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
       if (status == AnimationStatus.dismissed) {
         setState(() {
           isCameraInitialized = false;
-          isDetectedBarcodeCaptured = false;
           imageResult = null;
           textBlock = null;
           textBlocks = [];
@@ -79,17 +73,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
       }
     });
 
-    animationController = AnimationController(duration: const Duration(seconds: 1), vsync: this);
-    animation = Tween<double>(begin: frameStart, end: frameEnd).animate(animationController)  
-    ..addListener(() {
-      setState(() {});
-    })
-    ..addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        bottomSheetAnimationController.forward();
-      }
-    });
-    
     initTextRecognizer();
     initCamera();
     super.initState();
@@ -99,7 +82,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
   void dispose() {
     cameraController?.dispose();
     textRecognizer?.close();
-    animationController.dispose();
     super.dispose();
   }
 
@@ -147,19 +129,12 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: FramePainter(
-                            textBlocks: textBlocks,
-                            scannerLine: animation.value,
-                            scannerGradientColors: scannerGradientColors,
-                            onBarcodeScanned: onBarcodeScanned
-                          ),
-                          child: Container(),
-                        );
-                      }
+                    child: CustomPaint(
+                      painter: FramePainter(
+                        textBlocks: textBlocks,
+                        onScanned: onScanned
+                      ),
+                      child: Container(),
                     )
                   )
                 ],
@@ -277,9 +252,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
       enableAudio: false
     );
 
-    scannerGradientColors = [Colors.transparent, Colors.transparent];
-    animationController.reset();
-
     try {
       await cameraController?.initialize().whenComplete(() {
         setState(() {
@@ -296,15 +268,10 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
     }
   }
 
-  void onBarcodeScanned(TextBlock textBlock) async {
-    if (isDetectedBarcodeCaptured) return;
-    
-    this.textBlock = textBlock;
-    
-    isDetectedBarcodeCaptured = true;
-
-    onTakePicture();
-    
+  void onScanned(List<Content> contents) {
+    contents.forEach((element) {
+      print("Hello ${element.key} ${element.value}");
+    });
   }
 
   void onTakePicture() async {
@@ -330,8 +297,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
       textBlocks = recognizedText.blocks;
     });
 
-    scannerGradientColors = [Colors.transparent, Colors.green];
-    animationController.forward();
   }
 
   Widget onRenderResult(double height, double width) {

@@ -1,20 +1,18 @@
 import 'dart:ui';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:collection/collection.dart';
 
 class FramePainter extends CustomPainter {
 
   final List<TextBlock> textBlocks;
-  final List<Color> scannerGradientColors;
-  final double scannerLine;
-  final ValueSetter<TextBlock> onBarcodeScanned;
+  final ValueSetter<List<Content>> onScanned;
   
   FramePainter({
     required this.textBlocks, 
-    required this.scannerLine,
-    required this.scannerGradientColors,
-    required this.onBarcodeScanned
+    required this.onScanned
   });
 
   @override
@@ -24,13 +22,13 @@ class FramePainter extends CustomPainter {
 
     final holeRect = Rect.fromCenter(
       center: Offset(size.width * 0.5, size.height * 0.5), 
-      width: size.width * 0.8, 
-      height: (3/4) * (size.width * 0.8) //3:4 is the aspect ratio of ID Card
+      width: size.width * 0.9, 
+      height: (3/4) * (size.width * 0.9) //3:4 is the aspect ratio of ID Card
     );
 
     final Paint detectorPaint = Paint();
     detectorPaint.style = PaintingStyle.stroke;
-    detectorPaint.strokeWidth = 5;
+    detectorPaint.strokeWidth = 2;
 
     final List<TextBlock> filteredTextBlocks = textBlocks.where((TextBlock textBlock) {
 
@@ -53,23 +51,53 @@ class FramePainter extends CustomPainter {
       return (!isOutOfTheFrame) && (!isNotPerfectlyInTheFrame);
     }).toList();
 
-    filteredTextBlocks.asMap().forEach((int index, TextBlock textBlock) {
-      print("Hello ${textBlock.text}");
-      
-      detectorPaint.color = Colors.green;
+    List<Content> contents = [
+      Content(key: "NIK"),
+      Content(key: "Nama")
+    ];
 
-      if (index % 2 == 0) {
-        detectorPaint.color = Colors.yellow;
+    // Set coordinate of field name
+    for (TextBlock textBlock in filteredTextBlocks) {
+      for (TextLine textLine in textBlock.lines) {
+        Content? content = contents.firstWhereOrNull((element) => element.key == textLine.text);
+
+        if (content == null) continue;
+
+        content.keyRect = textLine.boundingBox;
+        int index = contents.indexOf(content);
+        contents[index] = content;
       }
+    }
+    
+    // Get value of field name
+    for (TextBlock textBlock in filteredTextBlocks) {
+      for (TextLine textLine in textBlock.lines) {
+        Content? content = contents.firstWhereOrNull((element) {
 
-      textBlock.lines.forEach((TextLine textLine) {
-        textLine.elements.forEach((TextElement textElement) {
-          final Rect barcodeRect = _scaleRect(textElement.boundingBox, size);
+          double left = element.keyRect?.left ?? 0;
+          double top = element.keyRect?.top ?? 0;
+          double right = element.keyRect?.right ?? 0;
+          double bottom = element.keyRect?.bottom ?? 0;
 
-          canvas.drawRect(barcodeRect, detectorPaint);
+          double targetY = textLine.boundingBox.center.dy
+          
+          Rect targetRect = textLine.boundingBox;
+
+          bool isExactlyTheSame = targetRect.left == left && targetRect.top == top && targetRect.right == right && targetRect.bottom == bottom;
+
+          return (targetY >= top && targetY <= bottom) && (!isExactlyTheSame);
+
         });
-      });
-    });
+
+        if (content == null) continue;
+
+        content.value = textLine.text;
+        int index = contents.indexOf(content);
+        contents[index] = content;
+      }
+    }
+
+    onScanned(contents);
 
     // Create masked frame overlay
     final Path path = Path.combine(
@@ -102,16 +130,21 @@ class FramePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.textBlocks != textBlocks || oldDelegate.scannerGradientColors != scannerGradientColors;
+  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.textBlocks != textBlocks;
   
 }
 
-class TextBlockAndRect {
-  late final TextBlock textBlock;
-  late final Rect rect;
+class Content extends Equatable{
+  final String key;
+  String? value;
+  Rect? keyRect;
 
-  TextBlockAndRect({
-    required this.textBlock,
-    required this.rect
+  Content({
+    required this.key,
+    this.value,
+    this.keyRect
   });
+
+  @override
+  List<Object?> get props => [key];
 }

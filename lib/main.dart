@@ -39,41 +39,33 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
   bool isCameraInitialized = false;
+  bool isFaceDetected = false;
   CameraController? cameraController;
-  TextRecognizer? textRecognizer;
+  FaceDetector? faceDetector;
   File? imageResult;
-  List<TextBlock> textBlocks = [];
+  List<Face> faces = [];
   
-  TextBlock? textBlock;
   late AnimationController bottomSheetAnimationController;
   late Animation bottomSheetAnimation;
   
   @override
   void initState() {
-    final logicalPixel = window.physicalSize / window.devicePixelRatio;
-    final logicalWidth = logicalPixel.width;
-    final logicalHeight = logicalPixel.height;
-
-    final frameSize = logicalWidth * 0.8;
-    final frameStart = (logicalHeight / 2) - (frameSize / 2);
-    final frameEnd = frameStart + frameSize;
-
     bottomSheetAnimationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
     bottomSheetAnimation = Tween<double>(begin: 1, end: 0).animate(bottomSheetAnimationController)
     ..addStatusListener((status) {
       if (status == AnimationStatus.dismissed) {
         setState(() {
           isCameraInitialized = false;
+          isFaceDetected = false;
           imageResult = null;
-          textBlock = null;
-          textBlocks = [];
-          initTextRecognizer();
+          faces = [];
+          initFaceDetector();
           initCamera();
         });
       }
     });
 
-    initTextRecognizer();
+    initFaceDetector();
     initCamera();
     super.initState();
   }
@@ -81,7 +73,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
   @override
   void dispose() {
     cameraController?.dispose();
-    textRecognizer?.close();
+    faceDetector?.close();
     super.dispose();
   }
 
@@ -90,26 +82,19 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
     if (!isCameraInitialized) return const Center(child: CircularProgressIndicator());
 
     log("AspectRatio: ${MediaQuery.of(context).size} ${MediaQuery.of(context).size.width}");
+    
+    final scale = 1 / (cameraController!.value.aspectRatio * MediaQuery.of(context).size.aspectRatio);
+
     return Scaffold(
       body: Row(children: [
         Expanded(
           child: Stack(
             children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        log("Constraints Camera: ${constraints.biggest}");
-                        return AspectRatio(
-                          aspectRatio: constraints.biggest.aspectRatio,
-                          child: CameraPreview(cameraController!),
-                        );
-                      }
-                    ),
-                  ),
-                ],
+              Center(
+                child: Transform.scale(
+                  scale: scale,
+                  child: CameraPreview(cameraController!),
+                )
               ),
               Column(
                 children: [
@@ -131,7 +116,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
                   Expanded(
                     child: CustomPaint(
                       painter: FramePainter(
-                        textBlocks: textBlocks,
+                        faces: faces,
                         onScanned: onScanned
                       ),
                       child: Container(),
@@ -237,14 +222,18 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
     );
   }
 
-  void initTextRecognizer() {
-    textRecognizer = GoogleMlKit.vision.textRecognizer();
+  void initFaceDetector() {
+    faceDetector = GoogleMlKit.vision.faceDetector(FaceDetectorOptions(
+      enableClassification: true,
+      enableTracking: true,
+      enableContours: true
+    ));
   }
 
   void initCamera() async {
     cameraController?.dispose();
     // Activate camera back
-    CameraDescription camera = await CameraUtils.getCamera(CameraLensDirection.back);
+    CameraDescription camera = await CameraUtils.getCamera(CameraLensDirection.front);
     // Init camera controller
     cameraController = CameraController(
       camera, 
@@ -259,6 +248,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
         });
       });
 
+      startImageStream();
+
       setState(() {
         imageResult = null;
         cameraController?.setFlashMode(FlashMode.off);
@@ -268,10 +259,14 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
     }
   }
 
-  void onScanned(List<Content> contents) {
-    contents.forEach((element) {
-      print("Hello ${element.key} ${element.value}");
-    });
+  void onScanned(Face face) {
+    if (isFaceDetected) return;
+
+    print("Hello ${face.smilingProbability}");
+
+    isFaceDetected = true;
+
+    onTakePicture();
   }
 
   void onTakePicture() async {
@@ -279,24 +274,37 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin{
 
     if (!isCameraInitialized) return;
 
-    XFile? image = await cameraController?.takePicture();
+    await cameraController?.pausePreview();
 
-    imageResult = File(image!.path);
-    
-    final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(cameraController!.description.sensorOrientation) ?? InputImageRotation.rotation0deg;
+    bottomSheetAnimationController.forward();
+  }
 
-    RecognizedText recognizedText = await CameraUtils.detectText(
-      image: imageResult!,
-      imageRotation: imageRotation,
-      textRecognizer: textRecognizer!
-    );
+  void startImageStream() async {
+    if (cameraController == null) return;
 
-    print("Hello detector: ${recognizedText.blocks.length}");
+    await cameraController?.startImageStream((image) async {
+        
+     if (isFaceDetected || (cameraController == null)) {
+        return;
+      }
 
-    setState(() {
-      textBlocks = recognizedText.blocks;
+      isFaceDetected = true;
+
+      final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(cameraController!.description.sensorOrientation) ?? InputImageRotation.rotation0deg;
+
+      List<Face> tempFaces = await CameraUtils.detectFace(
+        image: image,
+        imageRotation: imageRotation,
+        faceDetector: faceDetector!
+      );
+
+      setState(() {
+        faces = tempFaces;
+      });
+
+      isFaceDetected = false;
+
     });
-
   }
 
   Widget onRenderResult(double height, double width) {

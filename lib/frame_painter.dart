@@ -7,11 +7,11 @@ import 'package:collection/collection.dart';
 
 class FramePainter extends CustomPainter {
 
-  final List<TextBlock> textBlocks;
-  final ValueSetter<List<Content>> onScanned;
+  final List<Face> faces;
+  final ValueSetter<Face> onScanned;
   
   FramePainter({
-    required this.textBlocks, 
+    required this.faces, 
     required this.onScanned
   });
 
@@ -20,99 +20,60 @@ class FramePainter extends CustomPainter {
     final paint = Paint();
     paint.color = Colors.black54;
 
-    final holeRect = Rect.fromCenter(
+    final holeRect = Rect.fromCircle(
       center: Offset(size.width * 0.5, size.height * 0.5), 
-      width: size.width * 0.9, 
-      height: (3/4) * (size.width * 0.9) //3:4 is the aspect ratio of ID Card
+      radius: (size.width * 0.5) - 15
     );
-
-    final Paint detectorPaint = Paint();
-    detectorPaint.style = PaintingStyle.stroke;
-    detectorPaint.strokeWidth = 2;
-
-    final List<TextBlock> filteredTextBlocks = textBlocks.where((TextBlock textBlock) {
-
-      final Rect rect = _scaleRect(textBlock.boundingBox, size);
-
-      final bool isOutOfTheFrame = (
-        rect.left > holeRect.right ||
-        rect.top > holeRect.bottom ||  
-        rect.right < holeRect.left ||
-        rect.bottom < holeRect.top
-      );
-
-      final bool isNotPerfectlyInTheFrame = (
-        rect.left < holeRect.left ||
-        rect.top < holeRect.top ||
-        rect.right > holeRect.right ||
-        rect.bottom > holeRect.bottom
-      );
-
-      return (!isOutOfTheFrame) && (!isNotPerfectlyInTheFrame);
-    }).toList();
-
-    List<Content> contents = [
-      Content(key: "NIK"),
-      Content(key: "Nama")
-    ];
-
-    // Set coordinate of field name
-    for (TextBlock textBlock in filteredTextBlocks) {
-      for (TextLine textLine in textBlock.lines) {
-        Content? content = contents.firstWhereOrNull((element) => element.key == textLine.text);
-
-        if (content == null) continue;
-
-        content.keyRect = textLine.boundingBox;
-        int index = contents.indexOf(content);
-        contents[index] = content;
-      }
-    }
-    
-    // Get value of field name
-    for (TextBlock textBlock in filteredTextBlocks) {
-      for (TextLine textLine in textBlock.lines) {
-        Content? content = contents.firstWhereOrNull((element) {
-
-          double left = element.keyRect?.left ?? 0;
-          double top = element.keyRect?.top ?? 0;
-          double right = element.keyRect?.right ?? 0;
-          double bottom = element.keyRect?.bottom ?? 0;
-
-          double targetY = textLine.boundingBox.center.dy
-          
-          Rect targetRect = textLine.boundingBox;
-
-          bool isExactlyTheSame = targetRect.left == left && targetRect.top == top && targetRect.right == right && targetRect.bottom == bottom;
-
-          return (targetY >= top && targetY <= bottom) && (!isExactlyTheSame);
-
-        });
-
-        if (content == null) continue;
-
-        content.value = textLine.text;
-        int index = contents.indexOf(content);
-        contents[index] = content;
-      }
-    }
-
-    onScanned(contents);
 
     // Create masked frame overlay
     final Path path = Path.combine(
       PathOperation.difference, 
       Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height))..close(), 
-      Path()..addRRect(
-        RRect.fromRectAndRadius(
-          holeRect,
-          const Radius.circular(16)
-        )
-      )..close()
+      Path()..addOval(holeRect)..close()
     );
 
     // Draw masked frame overlay to the screen
     canvas.drawPath(path, paint);
+
+    /* ------------------------ Start | Detector ------------------------ */
+    final Paint detectorPaint = Paint();
+    detectorPaint.style = PaintingStyle.stroke;
+    detectorPaint.strokeWidth = 5;
+
+    final Path detectorCircle = Path.from(
+      Path()..addOval(holeRect)
+    );
+    
+
+    for (Face face in faces) {
+      print("Hello ${face.smilingProbability}");
+
+      final Rect rect = _scaleRect(face.boundingBox, size);
+      detectorPaint.color = Colors.green;
+      
+      // Prevent a barcode that the part of QR code still inside the frame
+      if (
+        rect.left < holeRect.left ||
+        rect.top < holeRect.top ||
+        rect.right > holeRect.right ||
+        rect.bottom > holeRect.bottom
+      ) {
+        detectorPaint.color = Colors.red;
+        canvas.drawPath(detectorCircle, detectorPaint);
+        // canvas.drawRect(rect, detectorPaint);
+        continue;
+      }
+
+      // canvas.drawRect(rect, detectorPaint);
+      canvas.drawPath(detectorCircle, detectorPaint);
+
+      if ((face.smilingProbability ?? 0) > 0.9) {
+        onScanned(face);
+        break;  
+      }
+    }
+
+    /* ------------------------ End | Detector ------------------------ */
 
   } 
 
@@ -130,7 +91,7 @@ class FramePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.textBlocks != textBlocks;
+  bool shouldRepaint(FramePainter oldDelegate) => oldDelegate.faces != faces;
   
 }
 

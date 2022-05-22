@@ -22,6 +22,16 @@ class CameraUtils {
     );
   }
 
+  static Future<List<Face>> detectFace({
+    required CameraImage image,
+    required InputImageRotation imageRotation,
+    required FaceDetector faceDetector
+  }) async {
+    return faceDetector.processImage(
+      getInputImage(image, imageRotation)
+    );
+  }
+
   static Future<RecognizedText> detectText({
     required File image,
     required InputImageRotation imageRotation,

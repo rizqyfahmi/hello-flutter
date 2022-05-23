@@ -49,5 +49,7 @@
 	<string>Your location is needed to determine where you are</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Your location is needed to determine where you are</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>[REASON_FOR_USING_FACEID_HERE]</string>
 </dict>
 </plist>

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:encrypt/encrypt.dart' as encryption;
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -28,10 +29,13 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final TextEditingController fieldController = TextEditingController();
+  final LocalAuthentication localAuth = LocalAuthentication();
   late SharedPreferences sharedPreferences;
   static const String privateKey = "gonroyxbblhqiapkpbxdmktprrrueqsc";
   String resultText = "";
   String plainText = "";
+  bool isAuthenticated = false;
 
   @override
   void initState() {
@@ -39,6 +43,12 @@ class _MainPageState extends State<MainPage> {
   }
 
   void encrypt(String plainText) async {
+    if (!isAuthenticated) {
+      isAuthenticated = await authenticate();
+    }
+
+    if(!isAuthenticated) return;
+
     final key = encryption.Key.fromUtf8(privateKey);
     final iv = encryption.IV.fromLength(16);
 
@@ -53,7 +63,14 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void decrypt(String encryptedText) {
+  void decrypt(String encryptedText) async {
+
+    if (!isAuthenticated) {
+      isAuthenticated = await authenticate();
+    }
+
+    if (!isAuthenticated) return;
+
     final key = encryption.Key.fromUtf8(privateKey);
     final iv = encryption.IV.fromLength(16);
 
@@ -62,6 +79,32 @@ class _MainPageState extends State<MainPage> {
 
     setState(() {
       resultText = encrypter.decrypt(encrypted, iv: iv);
+    });
+  }
+
+  Future<bool> authenticate() async {
+    bool isBiometricSupported = await localAuth.isDeviceSupported();
+
+    print("isBiometricSupported: $isBiometricSupported");
+
+    final isAuthenticated = await localAuth.authenticate(
+      localizedReason: "Authenticate with your biometrics",
+      options: const AuthenticationOptions(
+        biometricOnly: true,
+        useErrorDialogs: true
+      )
+    );
+
+    return isAuthenticated;
+  }
+
+  // Reset/logout authentication
+  void reset() {
+    sharedPreferences.clear();
+    isAuthenticated = false;
+    setState(() {
+      fieldController.text = "";
+      resultText = "";
     });
   }
 
@@ -78,25 +121,31 @@ class _MainPageState extends State<MainPage> {
             children: [
               TextField(
                 decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(vertical: 0),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
                   border: OutlineInputBorder(
                     borderSide: BorderSide()
                   )
                 ),
                 maxLines: 1,
+                controller: fieldController,
                 keyboardType: TextInputType.text,
                 onChanged: (value) {
-                  setState(() {
-                    plainText = value;
-                  });
+                  setState(() {});
                 },
+              ),
+              const SizedBox(
+                height: 8,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: fieldController.value.text.isNotEmpty ? Colors.green : Colors.grey
+                    ),
                     onPressed: () {
-                      encrypt(plainText);
+                      if (fieldController.value.text.isEmpty) return;
+                      encrypt(fieldController.value.text);
                     },
                     child: const Text("Encrypt"),
                   ),
@@ -104,7 +153,11 @@ class _MainPageState extends State<MainPage> {
                     width: 5,
                   ),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: fieldController.value.text.isNotEmpty ? Colors.green : Colors.grey
+                    ),
                     onPressed: () {
+                      if (fieldController.value.text.isEmpty) return;
                       final String? encryptedText = sharedPreferences.getString("EncryptedText");
 
                       if (encryptedText == null) return;
@@ -114,8 +167,23 @@ class _MainPageState extends State<MainPage> {
                       decrypt(encryptedText);
                     }, 
                     child: const Text("Decrypt")
+                  ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: fieldController.value.text.isNotEmpty ? Colors.green : Colors.grey
+                    ),
+                    onPressed: () {
+                      reset();    
+                    }, 
+                    child: const Text("Reset")
                   )
                 ],
+              ),
+              const SizedBox(
+                height: 8,
               ),
               Text(
                 "Result: $resultText",

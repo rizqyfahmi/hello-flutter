@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:encrypt/encrypt.dart' as encryption;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -27,7 +28,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  static const String privateKey = "my 32 length key................";
+  late SharedPreferences sharedPreferences;
+  static const String privateKey = "gonroyxbblhqiapkpbxdmktprrrueqsc";
   String resultText = "";
   String plainText = "";
 
@@ -36,14 +38,18 @@ class _MainPageState extends State<MainPage> {
     super.initState();
   }
 
-  void encrypt(String plainText) {
+  void encrypt(String plainText) async {
     final key = encryption.Key.fromUtf8(privateKey);
     final iv = encryption.IV.fromLength(16);
 
     final encrypter = encryption.Encrypter(encryption.AES(key));
+    final String result = encrypter.encrypt(plainText, iv: iv).base64;
+
+    sharedPreferences = await SharedPreferences.getInstance();
+    await sharedPreferences.setString("EncryptedText", result);
 
     setState(() {
-      resultText = encrypter.encrypt(plainText, iv: iv).base64;
+      resultText = result;
     });
   }
 
@@ -99,7 +105,13 @@ class _MainPageState extends State<MainPage> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      decrypt(resultText);
+                      final String? encryptedText = sharedPreferences.getString("EncryptedText");
+
+                      if (encryptedText == null) return;
+
+                      print("Hello Decrypt: $encryptedText");
+
+                      decrypt(encryptedText);
                     }, 
                     child: const Text("Decrypt")
                   )

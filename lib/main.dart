@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:encrypt/encrypt.dart' as encryption;
 import 'package:flutter/material.dart';
@@ -11,190 +12,77 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({ Key? key }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: MainPage(),
+      home: MainPage()
     );
   }
 }
 
-class MainPage extends StatefulWidget {
+class MainPage extends StatelessWidget {
   const MainPage({Key? key}) : super(key: key);
-
-  @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  final TextEditingController fieldController = TextEditingController();
-  final LocalAuthentication localAuth = LocalAuthentication();
-  late SharedPreferences sharedPreferences;
-  static const String privateKey = "gonroyxbblhqiapkpbxdmktprrrueqsc";
-  String resultText = "";
-  String plainText = "";
-  bool isAuthenticated = false;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  void encrypt(String plainText) async {
-    if (!isAuthenticated) {
-      isAuthenticated = await authenticate();
-    }
-
-    if(!isAuthenticated) return;
-
-    final key = encryption.Key.fromUtf8(privateKey);
-    final iv = encryption.IV.fromLength(16);
-
-    final encrypter = encryption.Encrypter(encryption.AES(key));
-    final String result = encrypter.encrypt(plainText, iv: iv).base64;
-
-    sharedPreferences = await SharedPreferences.getInstance();
-    await sharedPreferences.setString("EncryptedText", result);
-
-    setState(() {
-      resultText = result;
-    });
-  }
-
-  void decrypt(String encryptedText) async {
-
-    if (!isAuthenticated) {
-      isAuthenticated = await authenticate();
-    }
-
-    if (!isAuthenticated) return;
-
-    final key = encryption.Key.fromUtf8(privateKey);
-    final iv = encryption.IV.fromLength(16);
-
-    final encrypter = encryption.Encrypter(encryption.AES(key));
-    final encrypted = encryption.Encrypted.from64(encryptedText);
-
-    setState(() {
-      resultText = encrypter.decrypt(encrypted, iv: iv);
-    });
-  }
-
-  Future<bool> authenticate() async {
-    bool isBiometricSupported = await localAuth.isDeviceSupported();
-
-    print("isBiometricSupported: $isBiometricSupported");
-
-    final isAuthenticated = await localAuth.authenticate(
-      localizedReason: "Authenticate with your biometrics",
-      options: const AuthenticationOptions(
-        biometricOnly: true,
-        useErrorDialogs: true
-      )
-    );
-
-    return isAuthenticated;
-  }
-
-  // Reset/logout authentication
-  void reset() {
-    sharedPreferences.clear();
-    isAuthenticated = false;
-    setState(() {
-      fieldController.text = "";
-      resultText = "";
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Hello Security"),
+        title: const Text("Hello Chart"),
       ),
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              TextField(
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide()
-                  )
-                ),
-                maxLines: 1,
-                controller: fieldController,
-                keyboardType: TextInputType.text,
-                onChanged: (value) {
-                  setState(() {});
-                },
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: fieldController.value.text.isNotEmpty ? Colors.green : Colors.grey
-                    ),
-                    onPressed: () {
-                      if (fieldController.value.text.isEmpty) return;
-                      encrypt(fieldController.value.text);
-                    },
-                    child: const Text("Encrypt"),
-                  ),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: fieldController.value.text.isNotEmpty ? Colors.green : Colors.grey
-                    ),
-                    onPressed: () {
-                      if (fieldController.value.text.isEmpty) return;
-                      final String? encryptedText = sharedPreferences.getString("EncryptedText");
-
-                      if (encryptedText == null) return;
-
-                      print("Hello Decrypt: $encryptedText");
-
-                      decrypt(encryptedText);
-                    }, 
-                    child: const Text("Decrypt")
-                  ),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: fieldController.value.text.isNotEmpty ? Colors.green : Colors.grey
-                    ),
-                    onPressed: () {
-                      reset();    
-                    }, 
-                    child: const Text("Reset")
-                  )
-                ],
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Text(
-                "Result: $resultText",
-                style: const TextStyle(
-                  fontSize: 20
-                ),
-              )
-            ],
+      body: Stack(
+        children: [
+          Center(
+            child: CustomPaint(
+              painter: CircularChartPainter(),
+              child: Container(),
+            ),
           ),
-        ),
+          const Center(
+            child: Text(
+              "60%",
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
+}
+
+class CircularChartPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Offset center = Offset(size.width / 2, size.height / 2);
+    
+    double radius = min((size.width - 32) / 2, (size.height - 32) / 2);
+    /*
+      The angle is calculated by π, 2π = 360 degrees. The starting angle is clockwise from three o'clock. 
+      But we need to start clockwise from 0 o'clock, that is, we need 180 degrees counterclockwise = -π/2 = -180/2 (flutter uses pi to represent π)
+    */
+    double startAngle = -pi / 2;
+    double endAngle = (2 * pi) * 0.6; // 2 * π = full circle, 0.6 = 60%
+
+    Rect circle = Rect.fromCircle(center: center, radius: radius);
+
+    var paint = Paint()
+      ..color = Colors.grey.shade200
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 12
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, paint);
+
+    paint.color = Colors.green;
+    canvas.drawArc(circle, startAngle, endAngle, false, paint);
+
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+
 }

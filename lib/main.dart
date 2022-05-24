@@ -1,13 +1,16 @@
 
-import 'dart:convert';
 import 'dart:math';
 
-import 'package:encrypt/encrypt.dart' as encryption;
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.red
+    )
+  );
   runApp(const MyApp());
 }
 
@@ -17,37 +20,109 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      // theme: ThemeData(
+      //   appBarTheme: const AppBarTheme(
+      //     systemOverlayStyle: SystemUiOverlayStyle(
+      //       statusBarColor: Colors.red
+      //     )
+      //   )
+      // ),
       home: MainPage()
     );
   }
 }
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
 
   @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  ScrollController greenScrollController = ScrollController();
+  ScrollController yellowScrollController = ScrollController();
+  ScrollController redScrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    yellowScrollController.addListener(() {
+      print("Hello Yellow: ${yellowScrollController.offset}");
+      greenScrollController.jumpTo(yellowScrollController.offset * 0.25); // greenScrollController more slower than yellowScrollController
+    });
+
+    redScrollController.addListener(() {
+      print("Hello Red: ${redScrollController.offset}");
+      yellowScrollController.jumpTo(redScrollController.offset * 0.65); // yellowScrollController more slower than redScrollController
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Hello Chart"),
-      ),
       body: Stack(
         children: [
-          Center(
-            child: CustomPaint(
-              painter: CircularChartPainter(),
-              child: Container(),
+          Container(
+            color: Colors.red,
+            height: size.height,
+            width: size.width
+          ),
+          SafeArea(
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  controller: greenScrollController,
+                  child: Container(
+                    padding: const EdgeInsets.only(top: 18),
+                    width: size.width,
+                    height: size.height + 100,
+                    color: Colors.green,
+                    child: const Text(
+                      "Green",
+                      style: TextStyle(
+                        fontSize: 18
+                      ),
+                    ),
+                  ),
+                ),
+                SingleChildScrollView(
+                  controller: yellowScrollController,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 100),
+                    width: size.width,
+                    height: size.height + 100,
+                    color: Colors.yellow,
+                    child: const Text(
+                      "Yellow",
+                      style: TextStyle(
+                        fontSize: 18
+                      ),
+                    ),
+                  ),
+                ),
+                SingleChildScrollView(
+                  controller: redScrollController,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 150),
+                    width: size.width,
+                    height: size.height + 150,
+                    color: Colors.red,
+                    child: const Text(
+                      "Red",
+                      style: TextStyle(
+                        fontSize: 18
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const Center(
-            child: Text(
-              "60%",
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold
-              ),
-            ),
-          )
         ],
       ),
     );

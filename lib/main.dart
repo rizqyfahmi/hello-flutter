@@ -1,5 +1,6 @@
 
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -74,52 +75,45 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    Offset? offset = box?.localToGlobal(Offset.zero);
-
+    final padding = MediaQuery.of(context).padding;
+    
     return Scaffold(
-      body: Stack(
-        children: [
-         Container(
-           width: size.width,
-           height: size.height + 150,
-           color: Colors.red,
-           child: Column(
-             children: [
-               const Center(
-                 child: Text(
-                   "Hello one time",
-                   style: TextStyle(
-                     fontSize: 28
-                   ),
-                 ),
-               ),
-               const SizedBox(height: 50),
-               Container(
-                 key: childKey,
-                 color: Colors.white,
-                 padding: const EdgeInsets.all(8),
-                 height: 100,
-                 width: 200,
-               )
-             ]
-           ),
-         ),
-         Positioned(
-           top: offset?.dy ?? 0,
-           left: offset?.dx ?? 0,
-           child: Container(
-             color: Colors.red,
-             width: box?.size.width ?? 0,
-             height: box?.size.height ?? 0,
-           )
-         ),
-         Expanded(
-           child: CustomPaint(
-             painter: ShowcasePainter(renderBox: box),
-             child: Container(),
-           ),
-         )
-        ],
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Container(
+              width: size.width,
+              height: size.height + 150,
+              color: Colors.red,
+              child: Column(
+                children: [
+                  const SizedBox(height: 50),
+                  Container(
+                    color: Colors.red,
+                    padding: const EdgeInsets.all(8),
+                    child: Text(
+                      "Hello one time",
+                      key: childKey,
+                      style: const TextStyle(
+                        fontSize: 28
+                      ),
+                    ),
+                  )
+                ]
+              ),
+            ),
+            Column(
+              children: [
+                Expanded(
+                  child: CustomPaint(
+                    painter: ShowcasePainter(renderBox: box, top: padding.top),
+                    child: Container(),
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -160,9 +154,11 @@ class CircularChartPainter extends CustomPainter {
 
 class ShowcasePainter extends CustomPainter {
   final RenderBox? renderBox;
+  final double top;
 
   ShowcasePainter({
-    required this.renderBox
+    required this.renderBox,
+    required this.top
   });
 
   @override
@@ -173,7 +169,7 @@ class ShowcasePainter extends CustomPainter {
     final Size sizeBox = renderBox!.size;
     final Offset offsetBox = renderBox!.localToGlobal(Offset.zero);
 
-    print("Hello: $offsetBox $sizeBox");
+    print("Hello: $offsetBox $sizeBox ${top}");
 
     final Path path = Path.combine(
       PathOperation.difference, 
@@ -181,7 +177,7 @@ class ShowcasePainter extends CustomPainter {
       Path()..addRRect(
         RRect.fromRectAndRadius(
           // Rect.fromLTRB(offsetBox.dx, offsetBox.dy - sizeBox.height, offsetBox.dx + sizeBox.width, offsetBox.dy), 
-          Rect.fromLTWH(offsetBox.dx, offsetBox.dy, sizeBox.width, sizeBox.height), 
+          Rect.fromLTWH(offsetBox.dx, offsetBox.dy - top, sizeBox.width, sizeBox.height), 
           const Radius.circular(0)
         )
       )

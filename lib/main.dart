@@ -28,15 +28,15 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  ScrollController greenScrollController = ScrollController();
-  ScrollController yellowScrollController = ScrollController();
-  ScrollController redScrollController = ScrollController();
+  ScrollController contentScrollController = ScrollController();
 
   List<GlobalKey> globalKeys = [
     GlobalKey(), GlobalKey(), GlobalKey()
   ];
+
+  GlobalKey contentKey = GlobalKey();
   
-  RenderBox? box;
+  RenderBox? box, contentBox;
   int currentIndex = 0;
   bool isFinished = false;
 
@@ -69,6 +69,10 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     afterLayout();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      contentBox = contentKey.currentContext?.findRenderObject() as RenderBox;
+    });
   }
 
   @override
@@ -90,54 +94,53 @@ class _MainPageState extends State<MainPage> {
             ],
           ),
           SafeArea(
-            child: Stack(
-              children: [
-                Container(
-                  width: size.width,
-                  height: size.height + 150,
-                  color: Colors.red,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      Container(
-                        color: Colors.red,
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          "Hello one time",
-                          key: globalKeys[0],
-                          style: const TextStyle(
-                            fontSize: 28
-                          ),
+            child: SingleChildScrollView(
+              controller: contentScrollController,
+              child: Container(
+                key: contentKey,
+                width: size.width,
+                color: Colors.red,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        "Hello one time",
+                        key: globalKeys[0],
+                        style: const TextStyle(
+                          fontSize: 28
                         ),
                       ),
-                      const SizedBox(height: 50),
-                      Container(
-                        color: Colors.red,
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          "Hello second time",
-                          key: globalKeys[1],
-                          style: const TextStyle(
-                            fontSize: 28
-                          ),
+                    ),
+                    const SizedBox(height: 50),
+                    Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        "Hello second time",
+                        key: globalKeys[1],
+                        style: const TextStyle(
+                          fontSize: 28
                         ),
                       ),
-                      const SizedBox(height: 100),
-                      Container(
-                        color: Colors.red,
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          "Hola",
-                          key: globalKeys[2],
-                          style: const TextStyle(
-                            fontSize: 28
-                          ),
+                    ),
+                    const SizedBox(height: 500),
+                    Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        "Hola",
+                        key: globalKeys[2],
+                        style: const TextStyle(
+                          fontSize: 28
                         ),
-                      )
-                    ]
-                  ),
+                      ),
+                    )
+                  ]
                 ),
-              ],
+              ),
             ),
           ),
           renderOverlay(padding: padding),
@@ -156,7 +159,7 @@ class _MainPageState extends State<MainPage> {
       children: [
         Expanded(
           child: CustomPaint(
-            painter: ShowcasePainter(renderBox: box, top: padding.top),
+            painter: ShowcasePainter(renderBox: box, contentBox: contentBox, top: padding.top),
             child: Container(),
           ),
         ),
@@ -202,45 +205,13 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-class CircularChartPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    Offset center = Offset(size.width / 2, size.height / 2);
-    
-    double radius = min((size.width - 32) / 2, (size.height - 32) / 2);
-    /*
-      The angle is calculated by π, 2π = 360 degrees. The starting angle is clockwise from three o'clock. 
-      But we need to start clockwise from 0 o'clock, that is, we need 180 degrees counterclockwise = -π/2 = -180/2 (flutter uses pi to represent π)
-    */
-    double startAngle = -pi / 2;
-    double endAngle = (2 * pi) * 0.6; // 2 * π = full circle, 0.6 = 60%
-
-    Rect circle = Rect.fromCircle(center: center, radius: radius);
-
-    var paint = Paint()
-      ..color = Colors.grey.shade200
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 12
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, paint);
-
-    paint.color = Colors.green;
-    canvas.drawArc(circle, startAngle, endAngle, false, paint);
-
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-
-}
-
 class ShowcasePainter extends CustomPainter {
-  final RenderBox? renderBox;
+  final RenderBox? renderBox, contentBox;
   final double top;
 
   ShowcasePainter({
     required this.renderBox,
+    required this.contentBox,
     required this.top
   });
 
@@ -251,6 +222,11 @@ class ShowcasePainter extends CustomPainter {
 
     final Size sizeBox = renderBox!.size;
     final Offset offsetBox = renderBox!.localToGlobal(Offset.zero);
+    
+    final Size contentSize = contentBox!.size;
+
+    print("Result: $size, $contentSize, $top");
+
     final Path path = Path.combine(
       PathOperation.difference, 
       Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height))..close(), 

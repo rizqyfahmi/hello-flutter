@@ -1,5 +1,4 @@
 
-import 'dart:math';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -31,7 +30,7 @@ class _MainPageState extends State<MainPage> {
   ScrollController contentScrollController = ScrollController();
 
   List<GlobalKey> globalKeys = [
-    GlobalKey(), GlobalKey(), GlobalKey()
+    GlobalKey(), GlobalKey(), GlobalKey(), GlobalKey()
   ];
 
   GlobalKey contentKey = GlobalKey();
@@ -59,6 +58,11 @@ class _MainPageState extends State<MainPage> {
 
     if (currentBox == null) return;
 
+    if (currentIndex > 0) {
+      Offset? offset = box?.localToGlobal(Offset.zero);
+      contentScrollController.animateTo(offset?.dy ?? 0, duration: const Duration(seconds: 1), curve: Curves.ease);
+    }
+
     setState(() {
       box = currentBox;
       currentIndex = nextIndex;
@@ -72,6 +76,9 @@ class _MainPageState extends State<MainPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       contentBox = contentKey.currentContext?.findRenderObject() as RenderBox;
+      contentScrollController.addListener(() {
+        setState(() {});
+      });
     });
   }
 
@@ -122,7 +129,7 @@ class _MainPageState extends State<MainPage> {
                         "Hello second time",
                         key: globalKeys[1],
                         style: const TextStyle(
-                          fontSize: 28
+                          fontSize: 32
                         ),
                       ),
                     ),
@@ -134,17 +141,29 @@ class _MainPageState extends State<MainPage> {
                         "Hola",
                         key: globalKeys[2],
                         style: const TextStyle(
-                          fontSize: 28
+                          fontSize: 24
                         ),
                       ),
-                    )
+                    ),
+                    const SizedBox(height: 500),
+                    Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        "Alola",
+                        key: globalKeys[3],
+                        style: const TextStyle(
+                          fontSize: 16
+                        ),
+                      ),
+                    ),
                   ]
                 ),
               ),
             ),
           ),
           renderOverlay(padding: padding),
-          renderButton(offset: offset, padding: padding)
+          renderButton(context: context)
         ],
       ),
     );
@@ -167,7 +186,9 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget renderButton({required Offset? offset, required EdgeInsets padding}) {
+  Widget renderButton({required BuildContext context}) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final Offset? offset = box?.localToGlobal(Offset.zero);
 
     String text = "Selanjutnya";
 
@@ -179,28 +200,41 @@ class _MainPageState extends State<MainPage> {
       return Container();
     }
 
-    return Positioned(
-      top: (offset?.dy ?? 0) + (box?.size.height ?? 0) + 16,
-      left: offset?.dx ?? 0,
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          border: Border.all(width: 2, color: Colors.white),
-          borderRadius: BorderRadius.circular(16)
-        ),
-        child: TextButton(
-          onPressed: () {
-            onChangeLayout();
-          },
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white
-            )
+    double buttonYPosition = (offset?.dy ?? 0) + (box?.size.height ?? 0) + 16;
+
+    Widget widget = Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        border: Border.all(width: 2, color: Colors.white),
+        borderRadius: BorderRadius.circular(16)
+      ),
+      child: TextButton(
+        onPressed: () {
+          onChangeLayout();
+        },
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.white
           )
-        ),
-      )
+        )
+      ),
+    );
+
+    if (buttonYPosition > screenSize.height) {
+      buttonYPosition = ((offset?.dy ?? 0) - (offset?.dy ?? 0)) + (box?.size.height ?? 0) + 16;
+      return Positioned(
+        bottom: buttonYPosition,
+        left: offset?.dx ?? 0,
+        child: widget
+      );
+    }
+
+    return Positioned(
+      top: buttonYPosition,
+      left: offset?.dx ?? 0,
+      child: widget
     );
   }
 }
@@ -222,11 +256,6 @@ class ShowcasePainter extends CustomPainter {
 
     final Size sizeBox = renderBox!.size;
     final Offset offsetBox = renderBox!.localToGlobal(Offset.zero);
-    
-    final Size contentSize = contentBox!.size;
-
-    print("Result: $size, $contentSize, $top");
-
     final Path path = Path.combine(
       PathOperation.difference, 
       Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height))..close(), 
